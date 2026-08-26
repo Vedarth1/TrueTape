@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.myenv/
+myenv/
+node_modules/
+dist/
+.DS_Store
+data/seed/*.csv
+data/seed/*.json
+uploads/
+*.log
