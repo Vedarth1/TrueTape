@@ -29,6 +29,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  
+  frontend:
+    build: ./frontend
+    container_name: truetape_web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:5001/api
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
