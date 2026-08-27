@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 
 class Config:
@@ -7,6 +8,7 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-only-never-in-prod")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=12)
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
 
     AI_PROVIDER = os.environ.get("AI_PROVIDER", "deterministic")

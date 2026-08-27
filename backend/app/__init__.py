@@ -21,6 +21,10 @@ def create_app(config_object=Config):
     register_cli(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    
+    from app.auth.routes import init_auth
+    init_auth(app)
+
     cors.init_app(
         app,
         resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}},
