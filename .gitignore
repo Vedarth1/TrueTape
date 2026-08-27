@@ -10,3 +10,4 @@ data/seed/*.csv
 data/seed/*.json
 uploads/
 *.log
+.pytest_cache/
