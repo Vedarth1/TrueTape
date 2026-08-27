@@ -25,6 +25,9 @@ def create_app(config_object=Config):
     from app.auth.routes import init_auth
     init_auth(app)
 
+    from app.ingestion import init_ingestion
+    init_ingestion(app)
+
     cors.init_app(
         app,
         resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}},

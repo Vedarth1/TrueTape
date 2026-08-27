@@ -17,7 +17,7 @@ from sqlalchemy import text
 from sqlalchemy import create_engine, text
 from app.extensions import db
 from pathlib import Path
-from app.models import User
+from app.models import User, SourceTrustConfig, ValidationRule
 
 # The single source of truth for "append-only" tables. harden-db revokes on
 # these, and any later audit of the grants should read from this same list.
@@ -46,31 +46,70 @@ def _owner_engine():
     return create_engine(url, future=True)
 
 
-def _seed_users(path: Path) -> int:
+def _seed_users(path):
     payload = json.loads(path.read_text())
+    creds = []
     for u in payload:
-        email = u["email"].strip().lower()
+        name = u.get("name") or u.get("display_name")
+        email = (u.get("email") or f'{u["username"]}@truetape.local').strip().lower()
+        role = u["role"]
         pw_hash = bcrypt.hashpw(u["password"].encode(), bcrypt.gensalt()).decode()
         existing = db.session.execute(
             db.select(User).filter_by(email=email)).scalar_one_or_none()
         if existing:
-            existing.name, existing.role, existing.password_hash = \
-                u["name"], u["role"], pw_hash
+            existing.name, existing.role, existing.password_hash = name, role, pw_hash
         else:
-            db.session.add(User(name=u["name"], email=email,
-                                role=u["role"], password_hash=pw_hash))
+            db.session.add(User(name=name, email=email, role=role, password_hash=pw_hash))
+        creds.append((role, email))
+    return creds
+
+def _seed_trust_config(path):
+    payload = json.loads(path.read_text())
+    for t in payload:
+        fn = t.get("field_name")
+        q = db.select(SourceTrustConfig).filter_by(source_system=t["source_system"])
+        q = q.filter(SourceTrustConfig.field_name.is_(None)) if fn is None \
+            else q.filter_by(field_name=fn)
+        row = db.session.execute(q).scalar_one_or_none()
+        if row:
+            row.trust_score, row.rationale = t["trust_score"], t["rationale"]
+        else:
+            db.session.add(SourceTrustConfig(
+                source_system=t["source_system"], field_name=fn,
+                trust_score=t["trust_score"], rationale=t["rationale"]))
+    return len(payload)
+
+
+def _seed_rules(path):
+    payload = json.loads(path.read_text())
+    for r in payload:
+        version = r.get("version", 1)
+        row = db.session.execute(db.select(ValidationRule).filter_by(
+            rule_code=r["rule_code"], version=version)).scalar_one_or_none()
+        fields = dict(
+            scope=r["scope"], severity=r["severity"], condition=r["condition"],
+            message_template=r["message_template"], source="seed",
+            explanation=r.get("explanation"), is_active=True)
+        if row:
+            for k, v in fields.items():
+                setattr(row, k, v)
+        else:
+            db.session.add(ValidationRule(rule_code=r["rule_code"], version=version, **fields))
     return len(payload)
 
 
 @click.command("seed")
 @with_appcontext
 def seed():
-    """Idempotent seed. Runs as the app role — users/trust/rules are freely
-    writable; only the four append-only tables are revoked. (Trust config and
-    the 18 rules load here next.)"""
-    n_users = _seed_users(Path(SEED_DIR) / "users.json")
+    base = Path(SEED_DIR)
+    creds = _seed_users(base / "users.json")
+    n_trust = _seed_trust_config(base / "trust_config.json")
+    n_rules = _seed_rules(base / "validation_rules.json")
     db.session.commit()
-    click.echo(f"seed: {n_users} users upserted from {SEED_DIR}/users.json")
+    click.echo(f"seed: {len(creds)} users, {n_trust} trust-config rows, {n_rules} rules")
+    click.echo("login emails (passwords come from users.json):")
+    for role, email in sorted(creds):
+        click.echo(f"  {role:9s} {email}")
 
 
 @click.command("reset-db")
