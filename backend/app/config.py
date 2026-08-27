@@ -14,6 +14,7 @@ class Config:
     GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
     GROQ_REASONING_EFFORT = os.environ.get("GROQ_REASONING_EFFORT", "low")
     AI_TIMEOUT_SECONDS = int(os.environ.get("AI_TIMEOUT_SECONDS", "20"))
+    MIGRATION_DATABASE_URL = os.environ.get("MIGRATION_DATABASE_URL", "")
 
     UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/data/uploads")
     MAX_CONTENT_LENGTH = 64 * 1024 * 1024   # 64 MB

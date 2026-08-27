@@ -16,6 +16,9 @@ def create_app(config_object=Config):
         
 
     db.init_app(app)
+    from app import models
+    from app.cli import register_cli
+    register_cli(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(
