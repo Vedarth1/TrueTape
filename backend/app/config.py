@@ -10,8 +10,10 @@ class Config:
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
 
     AI_PROVIDER = os.environ.get("AI_PROVIDER", "deterministic")
-    AI_API_KEY = os.environ.get("AI_API_KEY") or None
-    AI_MODEL = os.environ.get("AI_MODEL") or None
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+    GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    GROQ_REASONING_EFFORT = os.environ.get("GROQ_REASONING_EFFORT", "low")
+    AI_TIMEOUT_SECONDS = int(os.environ.get("AI_TIMEOUT_SECONDS", "20"))
 
     UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/data/uploads")
     MAX_CONTENT_LENGTH = 64 * 1024 * 1024   # 64 MB

@@ -8,6 +8,13 @@ def create_app(config_object=Config):
     app = Flask(__name__)
     app.config.from_object(config_object)
 
+    if app.config["AI_PROVIDER"] == "groq" and not app.config["GROQ_API_KEY"]:
+        raise RuntimeError(
+            "AI_PROVIDER=groq but GROQ_API_KEY is empty. Set the key, or set "
+            "AI_PROVIDER=deterministic to choose the stub explicitly."
+        )
+        
+
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
