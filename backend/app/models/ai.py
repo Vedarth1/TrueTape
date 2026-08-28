@@ -50,9 +50,11 @@ class AiRecommendation(db.Model):
         sa.ForeignKey("exception_clusters.id"))
 
     # Provenance envelope: shared by all five action types, all NOT NULL.
-    # 'provider' records what actually served the request, which matters
-    # because the provider degrades to the deterministic stub on failure and
-    # the record must say so rather than implying a model call happened.
+    # 'provider' records what actually served the request. In v1 that is always
+    # "deterministic" (a rule, not a model) and the row says so plainly. The
+    # column exists so that if a real provider is wired later, each rec can name
+    # the truth of what produced it -- rather than a boolean that would imply
+    # every past rec was a model call.
     model_name: Mapped[str] = mapped_column(sa.Text, nullable=False)
     model_version: Mapped[str] = mapped_column(sa.Text, nullable=False)
     prompt_version: Mapped[str] = mapped_column(sa.Text, nullable=False)
@@ -65,10 +67,11 @@ class AiRecommendation(db.Model):
     # explain_failure
     problem: Mapped[Optional[str]] = mapped_column(sa.Text)
     evidence: Mapped[Optional[dict]] = mapped_column(JSONB)
-    # CAREFUL: this is the reviewer-facing explanation, parsed out of
-    # json.loads(message["content"])["reasoning"]. It is NOT message["reasoning"],
-    # which is the provider's chain-of-thought and belongs in raw_model_response.
-    # Same key, two meanings -- this collision already cost us once.
+    # The reviewer-facing explanation. In v1 the deterministic stub composes
+    # this from the structured evidence (see services/ai._build_reasoning).
+    # Contract for when a real provider is added: this column holds the
+    # human-readable answer ONLY -- a provider's raw chain-of-thought stays in
+    # raw_model_response, never here.
     reasoning: Mapped[Optional[str]] = mapped_column(sa.Text)
 
     # suggest_correction

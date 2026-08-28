@@ -32,6 +32,7 @@ from app.models import (AiRecommendation, ExceptionComment, ExceptionRecord,
                         Loan, LoanCanonical, LoanRecord, ReviewerDecision,
                         ValidationResult, ValidationRule)
 from app.services.audit import log_event
+from app.validation.runner import revalidate_record
 
 bp = Blueprint("exceptions", __name__, url_prefix="/api/exceptions")
 
@@ -322,17 +323,72 @@ def resolve_exception(exc_id):
     )
     db.session.add(decision)
 
-    # Apply changes to loan_canonical.pinned_fields
-    if changes and exc.loan_id:
+    # Apply the reviewer's corrections. ONLY edit / manual_resolution may touch
+    # canonical data: a reject that happens to carry a changes array must not
+    # mutate the record it is rejecting (the old `if changes and exc.loan_id`
+    # gate let it through). accept/reject fall straight past this block.
+    if action in ("edit", "manual_resolution") and changes and exc.loan_id:
         canon = db.session.get(LoanCanonical, exc.loan_id)
         if canon is None:
             return _err("NO_CANONICAL",
                         "loan has no canonical record to edit", 409)
+
+        # Read the 'before' values server-side from canonical, NOT from the
+        # client payload. The audit trail must attest to what the system
+        # actually held, not to what the caller claimed it held -- otherwise a
+        # reviewer (or a bug) could write a fictional before-value into the
+        # hash chain.
+        before_values = {ch["field"]: (canon.data or {}).get(ch["field"])
+                         for ch in changes}
+        after_values = {ch["field"]: ch["after"] for ch in changes}
+
+        # Pin the corrected value AND reflect it in canonical.data/provenance
+        # immediately, mirroring exactly what build_canonical does when it
+        # carries a pinned field forward. Doing it inline keeps the detail
+        # endpoint consistent without re-blending all 1,200 loans (which would
+        # also emit its own run-level audit event).
         pinned = dict(canon.pinned_fields or {})
-        for ch in changes:
-            pinned[ch["field"]] = ch["after"]
+        data = dict(canon.data or {})
+        provenance = dict(canon.field_provenance or {})
+        for field, value in after_values.items():
+            pinned[field] = value
+            data[field] = value
+            provenance[field] = {
+                "source_system": "human_override",
+                "trust_score": 100,
+                "pinned": True,
+            }
         canon.pinned_fields = pinned
+        canon.data = data
+        canon.field_provenance = provenance
         canon.computed_at = datetime.now(timezone.utc)
+
+        # Append-only lineage: a human edit INSERTs a new revision rather than
+        # mutating a source row, so "what did the reviewer change, and when" is
+        # a one-line query. version is per-(loan, source) and part of the
+        # revision_unique_per_source key, so a second edit becomes v2, v3, ...
+        max_ver = db.session.execute(
+            db.select(sa.func.max(LoanRecord.version)).filter(
+                LoanRecord.loan_id == exc.loan_id,
+                LoanRecord.source_system == "human_override")
+        ).scalar()
+        override_record = LoanRecord(
+            id=uuid.uuid4(),
+            loan_id=exc.loan_id,
+            raw_record_id=None,
+            source_system="human_override",
+            version=(max_ver or 0) + 1,
+            data=after_values,
+            origin="human_edit",
+            effective_at=datetime.now(timezone.utc),
+        )
+        db.session.add(override_record)
+        db.session.flush()   # materialize the FK before revalidate references it
+
+        # Validate the reviewer's own value the same way an import is validated.
+        # This is what makes the edit flow honest: a manual correction that is
+        # itself invalid opens a new exception instead of being trusted.
+        revalidate_record(override_record, now=datetime.now(timezone.utc))
 
         log_event(
             event_type="field_edited",
@@ -341,8 +397,8 @@ def resolve_exception(exc_id):
             loan_id=exc.loan_id,
             actor_id=reviewer_id,
             actor_type="human",
-            before_value={ch["field"]: ch.get("before") for ch in changes},
-            after_value={ch["field"]: ch.get("after") for ch in changes},
+            before_value=before_values,
+            after_value=after_values,
             reason=f"reviewer decision: {action} on exception {exc_id}",
         )
 
@@ -476,19 +532,31 @@ def batch_resolve():
 
     db.session.add_all(decisions)
 
-    log_event(
-        event_type="loan_approved" if action == "accept" else "loan_rejected",
-        entity_type="batch",
-        entity_id=batch_id,
-        actor_id=reviewer_id,
-        actor_type="human",
-        after_value={
-            "action": action,
-            "exceptions_resolved": len(exceptions),
-            "batch_id": str(batch_id),
-        },
-        reason=f"batch resolve: {action} {len(exceptions)} exceptions",
-    )
+    # Attribute the batch to each affected loan. The old single batch-level
+    # event carried no loan_id, so a per-loan audit query (`WHERE loan_id = X`)
+    # never surfaced batch resolutions. Emitting one event per loan -- all
+    # sharing entity_id=batch_id -- keeps the action queryable BOTH ways: by
+    # batch (entity_id) and by loan (loan_id). Per-loan counts sum back to
+    # len(exceptions).
+    per_loan: dict = {}
+    for exc in exceptions:
+        per_loan[exc.loan_id] = per_loan.get(exc.loan_id, 0) + 1
+
+    for lid, count in per_loan.items():
+        log_event(
+            event_type="loan_approved" if action == "accept" else "loan_rejected",
+            entity_type="batch",
+            entity_id=batch_id,
+            loan_id=lid,
+            actor_id=reviewer_id,
+            actor_type="human",
+            after_value={
+                "action": action,
+                "exceptions_resolved": count,
+                "batch_id": str(batch_id),
+            },
+            reason=f"batch resolve: {action} {count} exception(s) on this loan",
+        )
 
     db.session.commit()
     return jsonify({

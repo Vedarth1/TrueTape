@@ -1,12 +1,24 @@
 """AI Review Assistant service.
 
-Produces deterministic analysis for the five AI action types, writes
-AiRecommendation rows with full provenance, and logs audit events.
+Produces DETERMINISTIC analysis for the five AI action types, writes
+AiRecommendation rows with full provenance, and logs audit events. There is no
+LLM in v1: every field below is computed from structured data by rule --
+`model_name` is "deterministic-stub-v1" and `provider` is "deterministic", and
+the recommendation rows say so on their face.
 
-Provider-agnostic: the deterministic stub builds every field from
-structured data. When a real provider (Gemini / Groq) is added, only
-the _call_provider method changes \u2014 evidence assembly and confidence
-computation stay the same because confidence is a backend formula.
+Why a stub rather than a live model: the thing worth demonstrating is the
+*control surface* around AI, not the prose. Recommendations are stored as
+immutable evidence, kept separate from the human decision, logged into the
+audit hash chain with their model/prompt metadata, and structurally unable to
+write canonical loan data. Those controls are identical whether the reasoning
+text comes from a rule or from Gemini.
+
+The seam for a real provider is deliberate but honest about not existing yet:
+evidence assembly (`_build_*`) and the confidence formula
+(`_compute_confidence`) are already provider-independent, so wiring an actual
+model later means adding one call that returns the reasoning text and setting
+`provider`/`model_name` to the truth of what served it. No `_call_provider`
+method exists today; do not describe one as if it did.
 """
 from __future__ import annotations
 
@@ -23,7 +35,30 @@ from app.models import (
 from app.models.enums import AI_ACTION_TYPES, SEVERITIES
 from app.services.audit import log_event
 
+# Single source of truth for "who produced this recommendation". Written both
+# onto the AiRecommendation row AND into the audit event's ai_metadata, so the
+# provenance in the mutable rec table and the provenance in the tamper-evident
+# hash chain are guaranteed to agree.
+_MODEL_NAME = "deterministic-stub-v1"
+_MODEL_VERSION = "1.0.0"
+_PROVIDER = "deterministic"
 _PROMPT_VERSION = "deterministic-v1"
+
+
+def _ai_metadata() -> dict:
+    """Model/prompt provenance for the audit chain.
+
+    audit._HASH_FIELDS includes 'ai_metadata', so this dict is folded into the
+    event's SHA-256 and read back verbatim by verify_chain -- which is the
+    whole point: the model that produced a recommendation becomes an
+    unforgeable part of the log, not just an editable column.
+    """
+    return {
+        "model_name": _MODEL_NAME,
+        "model_version": _MODEL_VERSION,
+        "provider": _PROVIDER,
+        "prompt_version": _PROMPT_VERSION,
+    }
 
 # Fields where a mismatch is financially material.
 _HIGH_IMPACT_FIELDS = {
@@ -199,8 +234,8 @@ def analyze_exception(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommenda
     ai_rec = AiRecommendation(
         id=rec_id, action_type="explain_failure",
         exception_id=exc_id, cluster_id=exc.cluster_id,
-        model_name="deterministic-stub-v1", model_version="1.0.0",
-        provider="deterministic", prompt_version=_PROMPT_VERSION,
+        model_name=_MODEL_NAME, model_version=_MODEL_VERSION,
+        provider=_PROVIDER, prompt_version=_PROMPT_VERSION,
         prompt_text="(deterministic: no LLM prompt)",
         evidence_bundle=ctx.get("canonical_data", {}),
         problem=_build_problem_text(exc, ctx),
@@ -219,6 +254,7 @@ def analyze_exception(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommenda
         entity_id=rec_id, loan_id=exc.loan_id,
         actor_id=reviewer_id, actor_type="system",
         after_value={"action_type": "explain_failure", "confidence": confidence, "suggested_field": sf},
+        ai_metadata=_ai_metadata(),
         reason=f"deterministic analysis for exception {exc_id}",
     )
     return ai_rec
@@ -244,8 +280,8 @@ def classify_severity(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommenda
     ai_rec = AiRecommendation(
         id=rec_id, action_type="classify_severity",
         exception_id=exc_id, cluster_id=exc.cluster_id,
-        model_name="deterministic-stub-v1", model_version="1.0.0",
-        provider="deterministic", prompt_version=_PROMPT_VERSION,
+        model_name=_MODEL_NAME, model_version=_MODEL_VERSION,
+        provider=_PROVIDER, prompt_version=_PROMPT_VERSION,
         prompt_text="(deterministic: no LLM prompt)",
         evidence_bundle={"rule_severity": exc.severity, "field": field},
         suggested_severity=suggested, reasoning=reasoning,
@@ -259,6 +295,7 @@ def classify_severity(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommenda
         entity_id=rec_id, loan_id=exc.loan_id,
         actor_id=reviewer_id, actor_type="system",
         after_value={"action_type": "classify_severity", "suggested": suggested, "rule": exc.severity},
+        ai_metadata=_ai_metadata(),
         reason=f"deterministic severity for exception {exc_id}",
     )
     return ai_rec
@@ -281,8 +318,8 @@ def generate_reviewer_note(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> tuple[A
     ai_rec = AiRecommendation(
         id=rec_id, action_type="reviewer_note",
         exception_id=exc_id, cluster_id=exc.cluster_id,
-        model_name="deterministic-stub-v1", model_version="1.0.0",
-        provider="deterministic", prompt_version=_PROMPT_VERSION,
+        model_name=_MODEL_NAME, model_version=_MODEL_VERSION,
+        provider=_PROVIDER, prompt_version=_PROMPT_VERSION,
         prompt_text="(deterministic: no LLM prompt)",
         evidence_bundle={"loan_business_id": loan_bid, "field": field},
         note_text=note, reasoning=note,
@@ -302,6 +339,7 @@ def generate_reviewer_note(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> tuple[A
         entity_id=rec_id, loan_id=exc.loan_id,
         actor_id=reviewer_id, actor_type="system",
         after_value={"action_type": "reviewer_note", "note_length": len(note)},
+        ai_metadata=_ai_metadata(),
         reason=f"deterministic note for exception {exc_id}",
     )
     return ai_rec, comment
@@ -339,8 +377,8 @@ def summarize_batch(cluster_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommen
 
     ai_rec = AiRecommendation(
         id=rec_id, action_type="batch_summary", cluster_id=cluster_id,
-        model_name="deterministic-stub-v1", model_version="1.0.0",
-        provider="deterministic", prompt_version=_PROMPT_VERSION,
+        model_name=_MODEL_NAME, model_version=_MODEL_VERSION,
+        provider=_PROVIDER, prompt_version=_PROMPT_VERSION,
         prompt_text="(deterministic: no LLM prompt)",
         evidence_bundle={"cluster": cluster.cluster_label, "exception_count": len(excs)},
         summary_text=summary, reasoning=summary,
@@ -354,6 +392,7 @@ def summarize_batch(cluster_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommen
         entity_id=rec_id, loan_id=loan_id,
         actor_id=reviewer_id, actor_type="system",
         after_value={"action_type": "batch_summary", "cluster_id": str(cluster_id), "count": len(excs)},
+        ai_metadata=_ai_metadata(),
         reason=f"deterministic batch summary for cluster {cluster_id}",
     )
     return ai_rec

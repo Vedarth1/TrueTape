@@ -28,8 +28,9 @@ def _err(code, message, status, **details):
                               "details": details}}), status
 
 
-def _verified_summary(vr: VerifiedRecord, loan_business_id: str | None = None) -> dict:
-    return {
+def _verified_summary(vr: VerifiedRecord, loan_business_id: str | None = None,
+                      *, full: bool = False) -> dict:
+    out = {
         "id": str(vr.id),
         "loan_id": str(vr.loan_id),
         "loan_business_id": loan_business_id,
@@ -44,6 +45,13 @@ def _verified_summary(vr: VerifiedRecord, loan_business_id: str | None = None) -
         "verified_by": str(vr.verified_by),
         "verified_at": vr.verified_at.isoformat() if vr.verified_at else None,
     }
+    if full:
+        # The detail view is what a consumer inspects to trust a loan, so it
+        # carries the actual verified field values and their per-field
+        # provenance. The list view omits them to stay lightweight.
+        out["canonical_data"] = vr.canonical_data
+        out["field_provenance"] = vr.field_provenance
+    return out
 
 
 @bp.post("/loans/<uuid:loan_id>/verify")
@@ -52,7 +60,7 @@ def verify_one_loan(loan_id):
     """Verify a single loan. Requires all blocking exceptions resolved."""
     reviewer_id = uuid.UUID(get_jwt_identity())
     try:
-        vr = verify_loan(loan_id, reviewer_id)
+        vr, created = verify_loan(loan_id, reviewer_id)
     except ValueError:
         return _err("NOT_FOUND", "loan not found", 404)
     except RuntimeError as exc:
@@ -61,7 +69,10 @@ def verify_one_loan(loan_id):
     db.session.commit()
 
     loan = db.session.get(Loan, loan_id)
-    return jsonify(_verified_summary(vr, loan.loan_id if loan else None)), 201
+    # 201 for a freshly minted version; 200 when the loan was already verified
+    # at this exact snapshot and re-verifying was an idempotent no-op.
+    status = 201 if created else 200
+    return jsonify(_verified_summary(vr, loan.loan_id if loan else None, full=True)), status
 
 
 @bp.post("/verify-batch")
@@ -140,7 +151,7 @@ def get_verified(loan_id):
         return _err("NOT_FOUND", "no verified record for this loan", 404)
 
     loan = db.session.get(Loan, loan_id)
-    return jsonify(_verified_summary(vr, loan.loan_id if loan else None))
+    return jsonify(_verified_summary(vr, loan.loan_id if loan else None, full=True))
 
 
 @bp.get("/verify")

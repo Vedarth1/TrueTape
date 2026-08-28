@@ -201,6 +201,93 @@ def run_row_validation(force=False, now=None):
             "exceptions_created": len(exceptions)}
 
 
+def revalidate_record(record, now=None):
+    """Re-run active row-scope rules against ONE loan_record. Does NOT commit.
+
+    Used after a human edit inserts a `human_override` record: the reviewer's
+    chosen value is validated exactly the way an imported value would be, so a
+    bad manual edit (a negative balance, a maturity before origination) is
+    caught and surfaced as a fresh exception rather than silently trusted. This
+    is the integrity half of "re-run validation on edit" -- the half that has
+    teeth, because the original source rows are immutable and their own
+    results/exceptions cannot change.
+
+    Deliberately scoped to a single record: it writes validation_results for
+    THIS record only and never deletes anything, so it cannot trip the
+    reviewer-touched idempotency guards in _clear_previous and cannot duplicate
+    the untouched exceptions already sitting on the original source rows.
+    """
+    rules = db.session.execute(
+        db.select(ValidationRule)
+        .filter_by(scope="row", is_active=True)
+        .order_by(ValidationRule.rule_code)
+    ).scalars().all()
+    now = now or datetime.now(timezone.utc)
+
+    # A human_override record has no raw row, so its declared fields are simply
+    # whatever it carries -- the same branch run_row_validation takes for a
+    # human_edit record. A field the override does not carry stays ABSENT and
+    # its rules resolve to not_applicable, so a sparse edit cannot spuriously
+    # fail unrelated cross-field rules.
+    if record.raw_record_id:
+        in_scope = _build_scope_map().get(record.raw_record_id, frozenset())
+    else:
+        in_scope = (frozenset(record.data or {})
+                    | frozenset(record.field_errors or {}))
+
+    result_rows, exceptions = [], []
+    tally = {"pass": 0, "fail": 0, "not_applicable": 0}
+
+    for rule in rules:
+        ctx = EvalContext(record.data, record.field_errors, in_scope, now,
+                          source_system=record.source_system)
+        result, details = evaluate(rule.condition, ctx)
+        tally[result] += 1
+
+        result_rows.append({
+            "id": uuid.uuid4(),
+            "loan_record_id": record.id,
+            "loan_id": record.loan_id,
+            "rule_id": rule.id,
+            "rule_version": rule.version,
+            "result": result,
+            "details": details,
+        })
+
+        if result != "fail":
+            continue
+
+        refd = details["referenced_fields"]
+        exceptions.append(ExceptionRecord(
+            id=uuid.uuid4(),
+            loan_id=record.loan_id,
+            raw_record_id=None,
+            exception_type="validation_failure",
+            rule_id=rule.id,
+            field_name=refd[0] if len(refd) == 1 else None,
+            severity=rule.severity,
+            is_blocking=rule.severity in BLOCKING_SEVERITIES,
+            status="open",
+            detail={
+                "rule_code": rule.rule_code,
+                "rule_version": rule.version,
+                "source_system": record.source_system,
+                "record_version": record.version,
+                "message": render_message(rule.message_template,
+                                          details["values"]),
+                "origin": "human_edit_revalidation",
+                **details,
+            },
+        ))
+
+    if result_rows:
+        db.session.execute(sa.insert(ValidationResult), result_rows)
+    db.session.add_all(exceptions)
+
+    return {"record_id": str(record.id), **tally,
+            "exceptions_created": len(exceptions)}
+
+
 # ---------------------------------------------------------------------------
 # Stage 3b -- dataset-scope validation (B2)
 #

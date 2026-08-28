@@ -21,8 +21,13 @@ from app.models import User, SourceTrustConfig, ValidationRule
 
 # The single source of truth for "append-only" tables. harden-db revokes on
 # these, and any later audit of the grants should read from this same list.
+# loan_records is here for the same reason as the audit log: it is source
+# lineage. A human edit INSERTs revision N+1 (see exceptions.resolve), nothing
+# in the app ever UPDATEs a row, so revoking UPDATE/DELETE turns "immutable by
+# convention" into "immutable by grant" -- the app role literally cannot
+# rewrite what a source originally said.
 APPEND_ONLY_TABLES = ("audit_events", "ai_recommendations",
-                      "raw_records", "verified_records")
+                      "raw_records", "verified_records", "loan_records")
 APP_ROLE = "truetape_app"
 SEED_DIR = os.environ.get("SEED_DIR", "/data/seed")
 

@@ -10,14 +10,19 @@ the moment a reviewer approves it. It is:
 
 The trust score is a weighted blend, not a magic number:
 
-    40%  validation pass rate   pass / (pass + fail)
-    30%  exception health       resolved / total (or 100 if none)
+    40%  validation pass rate   severity-weighted pass / (pass + fail)
+    30%  exception health       severity-weighted resolved / total (or 100 if none)
     15%  source coverage        distinct sources / 3
     15%  source trust average   mean trust of the winning source per field
 
-Each factor is 0-100, so the composite is 0-100, and the breakdown column
-stores every factor so the UI can show WHY the score is 73, not just that
-it is.
+Pass rate and exception health are SEVERITY-WEIGHTED (a CRITICAL result counts
+8x a LOW one), so one critical data defect cannot be averaged away by a crowd
+of trivial passes. A loan with no validation evidence at all is capped low
+rather than inheriting a reassuring score from source coverage alone -- absence
+of failures is not evidence of correctness. Each factor is 0-100, so the
+composite is 0-100, and the breakdown column stores every factor -- plus the
+severity weights and whether the no-evidence cap fired -- so the UI can show
+WHY the score is 73, not just that it is.
 
 A loan is eligible for verification when it has no open BLOCKING exceptions
 (HIGH/CRITICAL). Non-blocking exceptions (LOW/MEDIUM) may remain open --
@@ -37,7 +42,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import (ExceptionRecord, Loan, LoanCanonical, LoanRecord,
                         RawFile, RawRecord, ReviewerDecision, ValidationResult,
-                        VerifiedRecord)
+                        ValidationRule, VerifiedRecord)
 from app.services.audit import canonical_json, log_event
 
 # Fixed advisory-lock key space for per-loan verified-record chains.
@@ -45,6 +50,17 @@ from app.services.audit import canonical_json, log_event
 # accepts a single bigint or two int4s. Two int4s gives a wider key space
 # without collisions: a fixed class key + a per-loan key.
 _VR_LOCK_CLASS = 42
+
+# Severity weights for the trust score: how far a single pass/fail of each
+# severity moves the validation and exception factors. A CRITICAL result counts
+# 8x a LOW one, so one critical defect cannot be diluted by a crowd of trivial
+# passes. Data, not magic -- echoed into the score breakdown for the UI.
+_SEVERITY_WEIGHT = {"LOW": 1.0, "MEDIUM": 2.0, "HIGH": 4.0, "CRITICAL": 8.0}
+
+# Ceiling for a loan with NO validation evidence at all. An unvalidated loan is
+# capped here rather than inheriting a reassuring composite from source coverage
+# and trust alone -- "nothing has been checked" must not read as "all clear".
+_NO_EVIDENCE_CAP = 25.0
 
 
 def _loan_lock_key(loan_id: uuid.UUID) -> int:
@@ -57,30 +73,59 @@ def _compute_trust_score(canon: LoanCanonical, loan_id: uuid.UUID) -> tuple[floa
     """Return (score, breakdown) for a loan's canonical record.
 
     Four factors, each 0-100, weighted to a 0-100 composite:
-      40% validation pass rate
-      30% exception health
+      40% validation pass rate   (severity-weighted)
+      30% exception health       (severity-weighted)
       15% source coverage
       15% source trust average
-    """
-    # --- Factor 1: validation pass rate ---
-    results = db.session.execute(
-        db.select(ValidationResult.result)
-        .filter_by(loan_id=loan_id)
-        .filter(ValidationResult.loan_record_id.isnot(None))
-    ).scalars().all()
-    passed = sum(1 for r in results if r == "pass")
-    failed = sum(1 for r in results if r == "fail")
-    total_val = passed + failed
-    pass_rate = (passed / total_val * 100) if total_val else 100.0
 
-    # --- Factor 2: exception health ---
+    A CRITICAL pass/fail moves the first two factors 8x as far as a LOW one,
+    and a loan with no validation evidence at all is capped at _NO_EVIDENCE_CAP
+    so an unchecked loan cannot masquerade as trustworthy.
+    """
+    # --- Factor 1: severity-weighted validation pass rate ---
+    # Join to the rule so each pass/fail carries its severity. A flat pass/fail
+    # ratio scores a loan with a negative current_balance the same as one with
+    # an unrecognised payment-status code; severity weighting makes a CRITICAL
+    # failure cost 8x a LOW one, which is how the risk actually reads.
+    rows = db.session.execute(
+        db.select(ValidationResult.result, ValidationRule.severity)
+        .join(ValidationRule, ValidationResult.rule_id == ValidationRule.id)
+        .filter(ValidationResult.loan_id == loan_id)
+        .filter(ValidationResult.loan_record_id.isnot(None))
+    ).all()
+    evidence_count = len(rows)
+    passed = sum(1 for r, _ in rows if r == "pass")
+    failed = sum(1 for r, _ in rows if r == "fail")
+    not_applicable = evidence_count - passed - failed
+    w_pass = sum(_SEVERITY_WEIGHT.get(sev, 1.0) for r, sev in rows if r == "pass")
+    w_fail = sum(_SEVERITY_WEIGHT.get(sev, 1.0) for r, sev in rows if r == "fail")
+    w_total = w_pass + w_fail
+    if w_total:
+        pass_rate = w_pass / w_total * 100
+    elif evidence_count:
+        # Rules ran but every one was not_applicable (e.g. a document-only
+        # loan): nothing was checkable, so nothing failed -- not a red flag.
+        pass_rate = 100.0
+    else:
+        # No validation results at all: the loan was never validated. Absence
+        # of failure is not evidence of correctness, so this factor earns zero
+        # and the no-evidence cap below keeps the composite honest.
+        pass_rate = 0.0
+    has_validation_evidence = evidence_count > 0
+
+    # --- Factor 2: severity-weighted exception health ---
+    # Weighted the same way: an unresolved CRITICAL exception drags health down
+    # far more than an unresolved LOW one, instead of counting one-for-one.
     excs = db.session.execute(
-        db.select(ExceptionRecord.status, ExceptionRecord.is_blocking)
+        db.select(ExceptionRecord.status, ExceptionRecord.severity)
         .filter_by(loan_id=loan_id)
     ).all()
     total_exc = len(excs)
-    resolved_exc = sum(1 for s, _ in excs if s in ("resolved", "rejected"))
-    exc_health = (resolved_exc / total_exc * 100) if total_exc else 100.0
+    resolved_exc = sum(1 for st, _ in excs if st in ("resolved", "rejected"))
+    w_exc_total = sum(_SEVERITY_WEIGHT.get(sev, 1.0) for _, sev in excs)
+    w_exc_resolved = sum(_SEVERITY_WEIGHT.get(sev, 1.0)
+                         for st, sev in excs if st in ("resolved", "rejected"))
+    exc_health = (w_exc_resolved / w_exc_total * 100) if w_exc_total else 100.0
 
     # --- Factor 3: source coverage ---
     source_systems = set()
@@ -106,6 +151,14 @@ def _compute_trust_score(canon: LoanCanonical, loan_id: uuid.UUID) -> tuple[floa
         + coverage * 0.15
         + trust_avg * 0.15
     )
+
+    # No-evidence cap: a loan that was never validated must not reach a
+    # reassuring score on the strength of source coverage and trust alone.
+    # Without this, an unvalidated loan with three sources scored ~60/100 --
+    # "looks fine" purely because nothing had been checked yet.
+    capped = not has_validation_evidence and score > _NO_EVIDENCE_CAP
+    if capped:
+        score = _NO_EVIDENCE_CAP
     score = round(max(0.0, min(100.0, score)), 2)
 
     breakdown = {
@@ -119,15 +172,18 @@ def _compute_trust_score(canon: LoanCanonical, loan_id: uuid.UUID) -> tuple[floa
             "source_coverage": 0.15,
             "source_trust_average": 0.15,
         },
+        "severity_weights": _SEVERITY_WEIGHT,
         "validation_counts": {
             "pass": passed, "fail": failed,
-            "not_applicable": len(results) - total_val,
+            "not_applicable": not_applicable,
         },
         "exception_counts": {
             "total": total_exc, "resolved": resolved_exc,
             "open": total_exc - resolved_exc,
         },
         "sources": sorted(source_systems),
+        "has_validation_evidence": has_validation_evidence,
+        "no_evidence_cap": _NO_EVIDENCE_CAP if capped else None,
     }
     return score, breakdown
 
@@ -258,8 +314,15 @@ def _loan_has_open_blocking(loan_id: uuid.UUID) -> int:
     ).scalar()
 
 
-def verify_loan(loan_id: uuid.UUID, reviewer_id: uuid.UUID) -> VerifiedRecord:
+def verify_loan(loan_id: uuid.UUID, reviewer_id: uuid.UUID) -> tuple[VerifiedRecord, bool]:
     """Create a verified_record for one loan. Does NOT commit.
+
+    Returns (record, created). `created` is False when the loan's latest
+    verified record already captures the identical canonical snapshot, trust
+    score, validation summary and source files -- re-verifying an unchanged
+    loan is a no-op that returns the existing record instead of minting a
+    duplicate version, so a double-clicked "Verify" cannot fork the chain into
+    v2, v3, ... of byte-identical content.
 
     Raises RuntimeError if the loan has open blocking exceptions.
     The caller (request handler) commits so the verified record, the audit
@@ -300,6 +363,24 @@ def verify_loan(loan_id: uuid.UUID, reviewer_id: uuid.UUID) -> VerifiedRecord:
         .order_by(VerifiedRecord.version.desc())
         .limit(1)
     ).scalars().first()
+
+    # Idempotency: if the latest verified record already captures this exact
+    # snapshot, re-verifying changes nothing -- return it rather than appending
+    # a byte-identical v+1. source_files is compared order-insensitively (its
+    # query has no ORDER BY) and trust_score is float-coerced (it returns from
+    # NUMERIC as Decimal). Anything that genuinely changed -- an edited field, a
+    # resolved exception that moved the score -- falls through and mints a new
+    # version, which is exactly what should happen.
+    if prev is not None and (
+        (canon.data or {}) == (prev.canonical_data or {})
+        and (canon.field_provenance or {}) == (prev.field_provenance or {})
+        and float(prev.trust_score) == trust_score
+        and val_summary == prev.validation_summary
+        and sorted(source_files, key=lambda f: f["file_id"])
+        == sorted(prev.source_files or [], key=lambda f: f["file_id"])
+    ):
+        return prev, False
+
     version = (prev.version + 1) if prev else 1
 
     # Collect decision IDs that touched this loan's exceptions.
@@ -372,7 +453,7 @@ def verify_loan(loan_id: uuid.UUID, reviewer_id: uuid.UUID) -> VerifiedRecord:
         reason=f"loan {loan.loan_id} verified (v{version}, trust={trust_score})",
     )
 
-    return vr
+    return vr, True
 
 
 def verify_eligible_loans(reviewer_id: uuid.UUID, limit: int = 0) -> dict:
@@ -415,8 +496,14 @@ def verify_eligible_loans(reviewer_id: uuid.UUID, limit: int = 0) -> dict:
 
     for loan in loans:
         try:
-            verify_loan(loan.id, reviewer_id)
-            verified += 1
+            _vr, created = verify_loan(loan.id, reviewer_id)
+            if created:
+                verified += 1
+            else:
+                # Already verified at this exact snapshot (idempotent no-op).
+                # Cannot occur here today -- already-verified loans are excluded
+                # above -- but counting it keeps the tuple contract honest.
+                skipped += 1
         except (RuntimeError, ValueError) as exc:
             skipped += 1
             errors.append({"loan_id": str(loan.id),
