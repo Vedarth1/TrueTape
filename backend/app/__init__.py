@@ -41,6 +41,8 @@ def create_app(config_object=Config):
     from .api.health import bp as health_bp
     app.register_blueprint(health_bp, url_prefix="/api")
     from .api.verified import bp as verified_bp
+    from .api.ai import bp as ai_bp
     app.register_blueprint(verified_bp)
+    app.register_blueprint(ai_bp)
 
     return app
