@@ -42,7 +42,9 @@ def create_app(config_object=Config):
     app.register_blueprint(health_bp, url_prefix="/api")
     from .api.verified import bp as verified_bp
     from .api.ai import bp as ai_bp
+    from .api.audit import bp as audit_bp
     app.register_blueprint(verified_bp)
     app.register_blueprint(ai_bp)
+    app.register_blueprint(audit_bp)
 
     return app
