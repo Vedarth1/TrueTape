@@ -10,7 +10,7 @@ from app.extensions import db
 from app.ingestion.service import (
     FILE_KIND_SOURCE, find_existing, sha256_hex, spawn_processing, store_bytes,
 )
-from app.models import RawFile, RawRecord
+from app.models import RawFile, RawRecord,ExceptionRecord
 from app.services.audit import log_event
 
 bp = Blueprint("files", __name__, url_prefix="/api/files")
@@ -99,5 +99,22 @@ def get_file(file_id):
         .filter(RawRecord.raw_file_id == file_id, RawRecord.parse_error.isnot(None))
         .order_by(RawRecord.row_number).limit(200)).all()
     summary["failed_rows"] = [{"row_number": r[0], "parse_error": r[1]} for r in failed]
-    summary["quarantined_rows"] = []  # filled in the normalization block (rows with no loan_id)
+    q = db.session.execute(
+        db.select(ExceptionRecord, RawRecord.row_number)
+        .join(RawRecord, ExceptionRecord.raw_record_id == RawRecord.id)
+        .filter(ExceptionRecord.raw_file_id == file_id)
+        .filter(ExceptionRecord.exception_type == "import_error")
+        .order_by(RawRecord.row_number)
+        .limit(200)
+    ).all()
+    quarantined_rows = [
+        {
+            "row_number": row_number,
+            "raw_record_id": str(exc.raw_record_id),
+            "field_name": exc.field_name,
+            "reason": (exc.detail or {}).get("reason"),
+        }
+        for exc, row_number in q
+    ]
+    summary["quarantined_rows"] = quarantined_rows
     return jsonify(summary)

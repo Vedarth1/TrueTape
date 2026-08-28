@@ -1,4 +1,6 @@
 from __future__ import annotations
+from app.ingestion.normalizer import normalize_file
+from app.services.audit import log_event
 
 import csv
 import hashlib
@@ -96,8 +98,27 @@ def _process_file(app, raw_file_id) -> None:
             if batch:
                 db.session.bulk_insert_mappings(RawRecord, batch)
             rf.row_count, rf.parsed_count, rf.failed_count = total, total - failed, failed
+            
+            # ---- Stage 2: normalize parsed rows -> canonical loan_records ----
+            norm = normalize_file(raw_file_id)   # builds loans/loan_records/exceptions; no commit
+
+            # ---- Stage 1 audit: one record_imported per file (system actor) ----
+            log_event(
+                event_type="record_imported",
+                entity_type="raw_file",
+                entity_id=raw_file_id,
+                actor_id=None,
+                actor_type="system",
+                after_value={
+                    "row_count": rf.row_count,
+                    "parsed_count": rf.parsed_count,
+                    "failed_count": rf.failed_count,
+                    "loan_records_created": norm["loan_records_created"],
+                    "quarantined_count": norm["quarantined_count"],
+                },
+            )
             rf.status = "completed"
-            db.session.commit()
+            db.session.commit()   # normalize work + audit event + status: one atomic commit
         except Exception as exc:  # noqa: BLE001 - worker must never crash silently
             db.session.rollback()
             rf = db.session.get(RawFile, raw_file_id)
