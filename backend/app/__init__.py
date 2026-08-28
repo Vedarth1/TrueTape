@@ -40,5 +40,7 @@ def create_app(config_object=Config):
     # One blueprint per module. Registered here and nowhere else.
     from .api.health import bp as health_bp
     app.register_blueprint(health_bp, url_prefix="/api")
+    from .api.verified import bp as verified_bp
+    app.register_blueprint(verified_bp)
 
     return app
