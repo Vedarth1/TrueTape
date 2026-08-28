@@ -28,6 +28,9 @@ def create_app(config_object=Config):
     from app.ingestion import init_ingestion
     init_ingestion(app)
 
+    from app.exceptions import init_exceptions
+    init_exceptions(app)
+
     cors.init_app(
         app,
         resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}},
