@@ -18,6 +18,12 @@ from sqlalchemy import create_engine, text
 from app.extensions import db
 from pathlib import Path
 from app.models import User, SourceTrustConfig, ValidationRule
+from app.validation.runner import (
+    run_cross_source_validation,
+    run_dataset_validation,
+    run_row_validation,
+)
+from app.services.canonical import build_canonical
 
 # The single source of truth for "append-only" tables. harden-db revokes on
 # these, and any later audit of the grants should read from this same list.
@@ -36,6 +42,7 @@ def register_cli(app):
     app.cli.add_command(reset_db)
     app.cli.add_command(harden_db)
     app.cli.add_command(seed)
+    app.cli.add_command(run_pipeline)
 
 
 def _owner_engine():
@@ -180,3 +187,39 @@ def harden_db():
                f"UPDATE/DELETE/TRUNCATE revoked on:")
     for table in APPEND_ONLY_TABLES:
         click.echo(f"  - {table}")
+
+@click.command("run-pipeline")
+@click.option("--force", is_flag=True,
+              help="clear previous results and re-run every stage. Refuses "
+                   "if any validation_failure exception is no longer 'open'.")
+@with_appcontext
+def run_pipeline(force):
+    """Run validation + canonical stages over imported data (stages 3-4).
+
+    Stage 1-2 (parse, normalise) happen automatically on upload. This command
+    chains the remaining stages in the order the pipeline contract expects:
+
+        1. run_row_validation         B1: row-scope rules
+        2. run_dataset_validation     B2: dataset-scope rules (duplicates)
+        3. run_cross_source_validation B3: OriginationCore vs ServicerFeed
+        4. build_canonical             blend sources into loan_canonical
+
+    All stages write without committing; the single commit at the end makes
+    the whole run atomic -- a failed stage leaves nothing half-written.
+    Re-running without --force is a no-op for stages that already have
+    results (idempotent), which makes this safe to retry after a crash.
+    """
+    stages = (
+        ("row validation", run_row_validation, True),
+        ("dataset validation", run_dataset_validation, True),
+        ("cross-source conflicts", run_cross_source_validation, True),
+        ("canonical blend", build_canonical, False),
+    )
+
+    for label, fn, takes_force in stages:
+        result = fn(force=force) if takes_force else fn()
+        click.echo(f"run-pipeline: {label}: {result}")
+
+    db.session.commit()
+    click.echo("run-pipeline: committed.")
+    click.echo("next: resolve exceptions, then POST /api/verify-batch.")

@@ -46,5 +46,7 @@ def create_app(config_object=Config):
     app.register_blueprint(verified_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(audit_bp)
+    from .api.consumer import bp as consumer_bp
+    app.register_blueprint(consumer_bp)
 
     return app
