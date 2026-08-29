@@ -1,33 +1,43 @@
-import { Routes, Route, Link, Navigate } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider, useAuth } from './lib/auth'
+import AppShell from './components/AppShell'
+import LoginPage from './pages/LoginPage'
 import OperatorDashboard from './pages/OperatorDashboard'
 import ReviewerQueue from './pages/ReviewerQueue'
 import ConsumerDashboard from './pages/ConsumerDashboard'
-import HealthBadge from './components/HealthBadge'
+
+function Protected({ roles, children }) {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  if (roles && !roles.includes(user.role)) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+        Your role ({user.role}) does not have access to this page.
+      </div>
+    )
+  }
+  return children
+}
+
+function HomeRedirect() {
+  const { user } = useAuth()
+  const home = { operator: '/operator', reviewer: '/reviewer', consumer: '/consumer' }
+  return <Navigate to={user ? home[user.role] ?? '/login' : '/login'} replace />
+}
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
-        <div className="flex items-center gap-6">
-          <span className="font-semibold tracking-tight">TrueTape</span>
-          <nav className="flex gap-4 text-sm">
-            <Link to="/operator" className="hover:underline">Operator</Link>
-            <Link to="/reviewer" className="hover:underline">Reviewer</Link>
-            <Link to="/consumer" className="hover:underline">Consumer</Link>
-          </nav>
-        </div>
-        <HealthBadge />
-      </header>
-
-      <main className="p-6">
-        <Routes>
-          <Route path="/" element={<Navigate to="/operator" replace />} />
-          <Route path="/operator" element={<OperatorDashboard />} />
-          <Route path="/reviewer" element={<ReviewerQueue />} />
-          <Route path="/consumer" element={<ConsumerDashboard />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<Protected><AppShell /></Protected>}>
+          <Route path="/operator" element={<Protected roles={['operator', 'reviewer']}><OperatorDashboard /></Protected>} />
+          <Route path="/reviewer" element={<Protected roles={['reviewer']}><ReviewerQueue /></Protected>} />
+          <Route path="/consumer" element={<Protected roles={['operator', 'reviewer', 'consumer']}><ConsumerDashboard /></Protected>} />
+          <Route path="/" element={<HomeRedirect />} />
           <Route path="*" element={<div>Not found</div>} />
-        </Routes>
-      </main>
-    </div>
+        </Route>
+      </Routes>
+    </AuthProvider>
   )
 }

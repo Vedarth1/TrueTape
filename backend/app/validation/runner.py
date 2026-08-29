@@ -61,30 +61,31 @@ def _existing_count(rule_ids):
 
 
 def _clear_previous(rule_ids):
-    """Replace, not append, on a forced re-run.
+    """Clear a previous row-scope run on a forced re-run.
 
-    Refuses if any validation_failure exception has left 'open': a reviewer has
-    touched it, and silently deleting a decided exception rewrites history the
-    audit chain already attests to. (Both normalizer doublings came from
-    non-idempotent re-runs -- the guard belongs here from day one, not after
-    the third stumble.)
+    Reviewer decisions are history, not obstacles: only OPEN exceptions are
+    deleted, and the (rule, raw_record) pairs a reviewer already resolved or
+    rejected are returned so the creation pass can skip them -- re-running
+    must not reopen a decided defect as a duplicate open exception.
     """
-    touched = db.session.execute(
-        db.select(sa.func.count(ExceptionRecord.id)).filter(
-            ExceptionRecord.exception_type == "validation_failure",
-            ExceptionRecord.raw_record_id.isnot(None),
-            ExceptionRecord.status != "open")
-    ).scalar()
-    if touched:
-        raise RuntimeError(
-            f"{touched} validation_failure exception(s) are no longer 'open'; "
-            "refusing to delete reviewer-touched rows.")
+    decided = {
+        (rule_id, raw_record_id)
+        for rule_id, raw_record_id in db.session.execute(
+            db.select(ExceptionRecord.rule_id, ExceptionRecord.raw_record_id)
+            .filter(ExceptionRecord.exception_type == "validation_failure",
+                    ExceptionRecord.rule_id.in_(rule_ids),
+                    ExceptionRecord.raw_record_id.isnot(None),
+                    ExceptionRecord.status != "open"))
+    }
     db.session.execute(sa.delete(ExceptionRecord).filter(
         ExceptionRecord.exception_type == "validation_failure",
-        ExceptionRecord.raw_record_id.isnot(None)))
+        ExceptionRecord.rule_id.in_(rule_ids),
+        ExceptionRecord.raw_record_id.isnot(None),
+        ExceptionRecord.status == "open"))
     db.session.execute(sa.delete(ValidationResult).filter(
         ValidationResult.rule_id.in_(rule_ids),
         ValidationResult.loan_record_id.isnot(None)))
+    return decided
 
 
 def run_row_validation(force=False, now=None):
@@ -102,11 +103,10 @@ def run_row_validation(force=False, now=None):
     existing = _existing_count(rule_ids)
     if existing and not force:
         return {"skipped": "already_validated", "existing_results": existing}
-    if existing:
-        _clear_previous(rule_ids)
 
     now = now or datetime.now(timezone.utc)
     scope_map = _build_scope_map()
+    decided_pairs = _clear_previous(rule_ids) if existing else set()
 
     # Every version, including the 5 duplicate version-2 rows: those are real
     # rows in the file, and B2's DUPLICATE_LOAN_ID depends on seeing them.
@@ -116,6 +116,7 @@ def run_row_validation(force=False, now=None):
     ).scalars().all()
 
     result_rows, exceptions = [], []
+    skipped_decided = 0
     tally = {"pass": 0, "fail": 0, "not_applicable": 0}
 
     for rec in records:
@@ -143,6 +144,12 @@ def run_row_validation(force=False, now=None):
             })
 
             if result != "fail":
+                continue
+
+            # A reviewer already decided this exact defect; keep the result
+            # row (it is the objective fact) but do not reopen the exception.
+            if (rule.id, rec.raw_record_id) in decided_pairs:
+                skipped_decided += 1
                 continue
 
             refd = details["referenced_fields"]
@@ -198,7 +205,9 @@ def run_row_validation(force=False, now=None):
 
     return {"rules": len(rules), "records": len(records),
             "results_written": len(result_rows), **tally,
-            "exceptions_created": len(exceptions)}
+            "exceptions_created": len(exceptions),
+            "decisions_preserved": len(decided_pairs),
+            "decided_skipped": skipped_decided}
 
 
 def revalidate_record(record, now=None):
@@ -309,28 +318,30 @@ def revalidate_record(record, now=None):
 
 
 def _clear_previous_dataset(rule_ids):
-    """Replace, not append, on a forced dataset re-run.
+    """Clear a previous dataset-scope run on a forced re-run.
 
     Scoped to the given dataset rule_ids so a force-rerun of B2 does not
     delete B1's row-scope exceptions -- the row and dataset passes are
-    independent and must be clearable independently.
+    independent and must be clearable independently. Reviewer decisions are
+    preserved: only OPEN exceptions are deleted, and their (rule, loan) pairs
+    are returned so the creation pass skips already-decided defects.
     """
-    touched = db.session.execute(
-        db.select(sa.func.count(ExceptionRecord.id)).filter(
-            ExceptionRecord.exception_type == "validation_failure",
-            ExceptionRecord.rule_id.in_(rule_ids),
-            ExceptionRecord.status != "open")
-    ).scalar()
-    if touched:
-        raise RuntimeError(
-            f"{touched} validation_failure exception(s) are no longer 'open'; "
-            "refusing to delete reviewer-touched rows.")
+    decided = {
+        (rule_id, loan_id)
+        for rule_id, loan_id in db.session.execute(
+            db.select(ExceptionRecord.rule_id, ExceptionRecord.loan_id)
+            .filter(ExceptionRecord.exception_type == "validation_failure",
+                    ExceptionRecord.rule_id.in_(rule_ids),
+                    ExceptionRecord.status != "open"))
+    }
     db.session.execute(sa.delete(ExceptionRecord).filter(
         ExceptionRecord.exception_type == "validation_failure",
-        ExceptionRecord.rule_id.in_(rule_ids)))
+        ExceptionRecord.rule_id.in_(rule_ids),
+        ExceptionRecord.status == "open"))
     db.session.execute(sa.delete(ValidationResult).filter(
         ValidationResult.rule_id.in_(rule_ids),
         ValidationResult.loan_record_id.isnot(None)))
+    return decided
 
 
 def _load_dataset_records():
@@ -474,12 +485,12 @@ def run_dataset_validation(force=False):
     existing = _existing_count(rule_ids)
     if existing and not force:
         return {"skipped": "already_validated", "existing_results": existing}
-    if existing:
-        _clear_previous_dataset(rule_ids)
+    decided_pairs = _clear_previous_dataset(rule_ids) if existing else set()
 
     records = _load_dataset_records()
 
     result_rows, exceptions = [], []
+    skipped_decided = 0
     tally = {"pass": 0, "fail": 0, "not_applicable": 0}
 
     for rule in rules:
@@ -514,6 +525,10 @@ def run_dataset_validation(force=False):
             })
 
             if result != "fail":
+                continue
+
+            if (rule.id, rec["loan_id_fk"]) in decided_pairs:
+                skipped_decided += 1
                 continue
 
             exceptions.append(ExceptionRecord(
@@ -561,7 +576,9 @@ def run_dataset_validation(force=False):
 
     return {"rules": len(rules), "records": len(records),
             "results_written": len(result_rows), **tally,
-            "exceptions_created": len(exceptions)}
+            "exceptions_created": len(exceptions),
+            "decisions_preserved": len(decided_pairs),
+            "decided_skipped": skipped_decided}
 
 
 # ---------------------------------------------------------------------------
@@ -606,22 +623,24 @@ _CONFLICT_FIELDS = {
 
 
 def _clear_previous_cross_source():
-    """Replace, not append, on a forced cross-source re-run.
+    """Clear previous source_conflict exceptions on a forced re-run.
 
     Scoped to exception_type='source_conflict' so B1/B2 validation_failure
-    exceptions are untouched.
+    exceptions are untouched. Reviewer decisions are preserved: only OPEN
+    conflicts are deleted, and their (loan, field) pairs are returned so the
+    detection pass skips already-decided disagreements.
     """
-    touched = db.session.execute(
-        db.select(sa.func.count(ExceptionRecord.id)).filter(
-            ExceptionRecord.exception_type == "source_conflict",
-            ExceptionRecord.status != "open")
-    ).scalar()
-    if touched:
-        raise RuntimeError(
-            f"{touched} source_conflict exception(s) are no longer 'open'; "
-            "refusing to delete reviewer-touched rows.")
+    decided = {
+        (loan_id, field)
+        for loan_id, field in db.session.execute(
+            db.select(ExceptionRecord.loan_id, ExceptionRecord.field_name)
+            .filter(ExceptionRecord.exception_type == "source_conflict",
+                    ExceptionRecord.status != "open"))
+    }
     db.session.execute(sa.delete(ExceptionRecord).filter(
-        ExceptionRecord.exception_type == "source_conflict"))
+        ExceptionRecord.exception_type == "source_conflict",
+        ExceptionRecord.status == "open"))
+    return decided
 
 
 def _latest_record(records, source_system):
@@ -655,8 +674,7 @@ def run_cross_source_validation(force=False):
     ).scalar()
     if existing and not force:
         return {"skipped": "already_detected", "existing_exceptions": existing}
-    if existing:
-        _clear_previous_cross_source()
+    decided_pairs = _clear_previous_cross_source() if existing else set()
 
     records = _load_dataset_records()
 
@@ -711,6 +729,9 @@ def run_cross_source_validation(force=False):
             if not is_conflict:
                 continue
 
+            if (loan_id_fk, field) in decided_pairs:
+                continue
+
             conflicts_found += 1
             exceptions.append(ExceptionRecord(
                 id=uuid.uuid4(),
@@ -751,4 +772,5 @@ def run_cross_source_validation(force=False):
 
     return {"loans_compared": loans_compared,
             "conflicts_found": conflicts_found,
-            "exceptions_created": len(exceptions)}
+            "exceptions_created": len(exceptions),
+            "decisions_preserved": len(decided_pairs)}
