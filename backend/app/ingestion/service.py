@@ -10,12 +10,21 @@ import uuid
 from pathlib import Path
 
 from flask import current_app
+from sqlalchemy import text
 
 from app.extensions import db
 from app.models import RawFile, RawRecord
 
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "/data/uploads"))
 CHUNK = 500
+
+# Session-level advisory-lock key that serialises file processing. Two uploads
+# landing seconds apart each spawn a thread, and both normalisers INSERT into
+# loans / loan_records for the same business loan_ids -- without the lock that
+# deadlocks on uq_loans_loan_id (proven the hard way). Session-scoped rather
+# than transaction-scoped because processing commits mid-file for progress;
+# released explicitly in the finally below.
+INGEST_LOCK_KEY = 903_711
 
 # file_kind → source_system. This is the single place the two stay in lockstep,
 # and it must match the trust_config.json keys exactly, or survivorship finds no
@@ -77,7 +86,19 @@ def _process_file(app, raw_file_id) -> None:
     """Runs in its own thread → its own app context and (thread-local) session.
     Reads the file off disk, so nothing crosses the thread boundary but an id."""
     with app.app_context():
+        # One file at a time, across threads AND processes. The lock lives on
+        # a DEDICATED connection held for the whole processing window, because
+        # the ORM session returns its connection to the pool after every
+        # commit -- a session-level advisory lock taken there would survive on
+        # a pooled connection while the unlock fired on a different one
+        # (observed live: the manifest worker blocked forever on a lock whose
+        # holder was an idle pool connection). Blocking here is fine: this is
+        # the worker thread, not the HTTP request.
+        lock_conn = db.engine.raw_connection()
+        lock_cur = lock_conn.cursor()
         try:
+            lock_cur.execute("SELECT pg_advisory_lock(%s)", (INGEST_LOCK_KEY,))
+            lock_conn.commit()
             rf = db.session.get(RawFile, raw_file_id)
             if rf is None:
                 return
@@ -127,4 +148,12 @@ def _process_file(app, raw_file_id) -> None:
                 db.session.commit()
             current_app.logger.exception("ingestion failed for %s: %s", raw_file_id, exc)
         finally:
+            db.session.rollback()   # end any aborted transaction before unlock
+            try:
+                lock_cur.execute("SELECT pg_advisory_unlock(%s)",
+                                 (INGEST_LOCK_KEY,))
+                lock_conn.commit()
+            except Exception:  # noqa: BLE001 - unlock must never mask the real error
+                pass
+            lock_conn.close()      # closes the dedicated lock connection
             db.session.remove()                  # return the connection to the pool

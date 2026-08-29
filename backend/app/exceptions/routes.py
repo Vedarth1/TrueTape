@@ -28,13 +28,16 @@ from flask_jwt_extended import get_jwt_identity
 
 from app.auth.decorators import role_required
 from app.extensions import db
-from app.models import (AiRecommendation, ExceptionComment, ExceptionRecord,
-                        Loan, LoanCanonical, LoanRecord, ReviewerDecision,
-                        ValidationResult, ValidationRule)
+from app.models import (AiRecommendation, ExceptionCluster, ExceptionComment,
+                        ExceptionRecord, Loan, LoanCanonical, LoanRecord,
+                        ReviewerDecision, ValidationResult, ValidationRule)
 from app.services.audit import log_event
 from app.validation.runner import revalidate_record
 
 bp = Blueprint("exceptions", __name__, url_prefix="/api/exceptions")
+
+# Severity ordering for "highest severity" display; CRITICAL sorts first.
+SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
 
 
 def _err(code, message, status, **details):
@@ -101,6 +104,16 @@ def list_exceptions():
     blocking = request.args.get("is_blocking")
     if blocking and blocking.lower() in ("true", "1", "yes"):
         q = q.filter(ExceptionRecord.is_blocking.is_(True))
+
+    # Free-text search over the loan's business id and borrower id. Joins on
+    # the FK, so quarantined rows (loan_id NULL, e.g. import errors) never
+    # match -- they have no loan to search for.
+    search = request.args.get("search")
+    if search:
+        pattern = f"%{search}%"
+        q = q.join(Loan, Loan.id == ExceptionRecord.loan_id).filter(
+            sa.or_(Loan.loan_id.ilike(pattern),
+                   Loan.borrower_id.ilike(pattern)))
 
     page = max(1, request.args.get("page", 1, type=int))
     per_page = min(200, max(1, request.args.get("per_page", 50, type=int)))
@@ -230,6 +243,34 @@ def get_exception(exc_id):
         for c in comments
     ]
 
+    # Reviewer decision history -- every action ever taken on this exception,
+    # oldest first, with the reviewer's name for the UI's action log.
+    decisions = db.session.execute(
+        db.select(ReviewerDecision)
+        .filter_by(exception_id=exc_id)
+        .order_by(ReviewerDecision.decided_at.asc())
+    ).scalars().all()
+    reviewer_ids = {d.reviewer_id for d in decisions}
+    reviewer_names = {}
+    if reviewer_ids:
+        from app.models import User
+        reviewer_names = dict(db.session.execute(
+            db.select(User.id, User.name).filter(User.id.in_(reviewer_ids))
+        ).all())
+    summary["decision_history"] = [
+        {
+            "id": str(d.id),
+            "action": d.action,
+            "request_correction": bool(d.request_correction),
+            "changes": d.changes or [],
+            "agreed_with_ai": d.agreed_with_ai,
+            "comment": d.comment,
+            "reviewer": reviewer_names.get(d.reviewer_id, str(d.reviewer_id)),
+            "decided_at": d.decided_at.isoformat() if d.decided_at else None,
+        }
+        for d in decisions
+    ]
+
     # Source records for this loan (so the reviewer can see what each source said)
     if exc.loan_id:
         recs = db.session.execute(
@@ -258,6 +299,8 @@ def resolve_exception(exc_id):
 
     Body:
         action: "accept" | "edit" | "reject" | "manual_resolution"
+        request_correction: optional bool, reject only -- bounces the loan
+                            back to "in_review" and audits correction_requested
         changes: [{"field": ..., "before": ..., "after": ..., "source_used": ...}]
                   required for edit/manual_resolution, ignored otherwise
         comment: optional string
@@ -281,6 +324,13 @@ def resolve_exception(exc_id):
         return _err("BAD_ACTION",
                     "action must be accept, edit, reject, or manual_resolution",
                     400)
+
+    # A reject can send the loan back to the operator for correction. Only
+    # meaningful with action="reject"; ignored otherwise.
+    request_correction = bool(body.get("request_correction"))
+    if request_correction and action != "reject":
+        return _err("BAD_REQUEST_CORRECTION",
+                    "request_correction is only valid with action='reject'", 400)
 
     changes = body.get("changes") or []
     if action in ("edit", "manual_resolution"):
@@ -317,6 +367,7 @@ def resolve_exception(exc_id):
         ai_recommendation_id=ai_rec_id,
         reviewer_id=reviewer_id,
         action=action,
+        request_correction=request_correction,
         changes=changes,
         agreed_with_ai=agreed,
         comment=body.get("comment"),
@@ -409,6 +460,27 @@ def resolve_exception(exc_id):
     else:
         exc.status = "resolved"
     exc.resolved_at = datetime.now(timezone.utc)
+
+    # A rejection can bounce the loan back to the operator's desk. The loan
+    # status change is the operator-side signal; the correction_requested
+    # audit event is the permanent record of who asked and why.
+    if request_correction and exc.loan_id:
+        loan = db.session.get(Loan, exc.loan_id)
+        if loan is not None and loan.status != "in_review":
+            loan.status = "in_review"
+        log_event(
+            event_type="correction_requested",
+            entity_type="loan",
+            entity_id=exc.loan_id,
+            loan_id=exc.loan_id,
+            actor_id=reviewer_id,
+            actor_type="human",
+            before_value={"loan_status": loan.status if loan else None,
+                          "exception_status": old_status},
+            after_value={"loan_status": "in_review",
+                         "exception_status": exc.status},
+            reason=body.get("comment") or f"correction requested on exception {exc_id}",
+        )
 
     # Comment if provided
     if body.get("comment"):
@@ -564,6 +636,68 @@ def batch_resolve():
         "action": action,
         "exceptions_resolved": len(exceptions),
     })
+
+
+@bp.get("/clusters")
+@role_required("operator", "reviewer")
+def list_clusters():
+    """Cluster-first view: root-cause groups with open member counts.
+
+    The queue UI shows these cards first; expanding a card filters the
+    exception list to cluster_id. member_count covers OPEN members only --
+    resolved rows shrink the card without a re-clustering pass.
+    """
+    rows = db.session.execute(
+        db.select(
+            ExceptionCluster.id,
+            ExceptionCluster.cluster_label,
+            ExceptionCluster.root_cause_signal,
+            ExceptionCluster.member_count,
+            sa.func.count(ExceptionRecord.id).filter(
+                ExceptionRecord.status == "open"),
+            sa.func.min(ExceptionRecord.severity),
+            sa.func.count(sa.distinct(ExceptionRecord.loan_id)),
+        )
+        .outerjoin(ExceptionRecord, ExceptionRecord.cluster_id == ExceptionCluster.id)
+        .group_by(
+            ExceptionCluster.id,
+            ExceptionCluster.cluster_label,
+            ExceptionCluster.root_cause_signal,
+            ExceptionCluster.member_count,
+        )
+        .order_by(sa.func.count(ExceptionRecord.id).filter(
+            ExceptionRecord.status == "open").desc())
+    ).all()
+
+    # Severity breakdown per cluster for the card's colour coding.
+    sev_rows = db.session.execute(
+        db.select(
+            ExceptionRecord.cluster_id,
+            ExceptionRecord.severity,
+            sa.func.count(ExceptionRecord.id),
+        )
+        .filter(ExceptionRecord.status == "open",
+                ExceptionRecord.cluster_id.isnot(None))
+        .group_by(ExceptionRecord.cluster_id, ExceptionRecord.severity)
+    ).all()
+    sev_by_cluster: dict = {}
+    for cluster_id, severity, n in sev_rows:
+        sev_by_cluster.setdefault(cluster_id, {})[severity] = n
+
+    return jsonify({"clusters": [
+        {
+            "id": str(cid),
+            "cluster_label": label,
+            "root_cause_signal": signal,
+            "member_count": member_count,
+            "open_count": open_n,
+            "loans_affected": loans_n,
+            "highest_severity": min(
+                sev_by_cluster.get(cid, {}), key=SEV_ORDER.get, default=None),
+            "severity_breakdown": sev_by_cluster.get(cid, {}),
+        }
+        for cid, label, signal, member_count, open_n, min_sev, loans_n in rows
+    ]})
 
 
 @bp.get("/stats")

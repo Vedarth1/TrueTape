@@ -396,3 +396,239 @@ def summarize_batch(cluster_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommen
         reason=f"deterministic batch summary for cluster {cluster_id}",
     )
     return ai_rec
+
+# ======================================================================
+# Natural-language rule generation (Module D, bullet 7)
+# ======================================================================
+# The stub compiles a reviewer's English sentence into the SAME JSON DSL the
+# seed rules use -- the exact tree the validation runner evaluates. Nothing is
+# eval'd, ever: the compiler only emits the node vocabulary below, which is
+# the whole security argument for AI-authored rules (see validation_rules.
+# condition's column comment).
+#
+# Convention: seed conditions are PASS predicates ("the row is fine when this
+# holds"), so the compiler translates the reviewer's VIOLATION phrasing into
+# its complement. "interest rate above 36" -> PASS: interest_rate <= 36.
+
+import re as _re
+
+# Canonical-field synonyms, lowercase -> canonical field name.
+_FIELD_SYNONYMS = {
+    "interest rate": "interest_rate", "rate": "interest_rate",
+    "current balance": "current_balance", "balance": "current_balance",
+    "original principal": "original_principal", "principal": "original_principal",
+    "credit score": "credit_score",
+    "dti": "dti_ratio", "debt to income": "dti_ratio",
+    "ltv": "ltv_ratio", "loan to value": "ltv_ratio",
+    "days past due": "days_past_due", "dpd": "days_past_due",
+    "payment status": "payment_status", "loan status": "payment_status",
+    "origination date": "origination_date",
+    "maturity date": "maturity_date", "maturity": "maturity_date",
+    "loan term": "loan_term_months", "term months": "loan_term_months",
+    "property state": "property_state", "state": "property_state",
+    "document status": "document_status", "doc status": "document_status",
+    "last updated": "last_updated_at", "updated at": "last_updated_at",
+    "loan id": "loan_id", "borrower id": "borrower_id",
+    "borrower name": "borrower_name", "borrower": "borrower_name",
+}
+
+# Longest-first so "current balance" wins over "balance".
+_SYNONYM_ORDER = sorted(_FIELD_SYNONYMS, key=len, reverse=True)
+
+# Violation phrases -> the PASS-predicate operator they imply.
+#   "above 36"  means the row is BAD when X > 36, so the rule must PASS
+#               when X <= 36.
+_VIOLATION_TO_PASS = [
+    (r"\b(?:above|over|greater than|more than|exceeds|higher than)\s+", "<="),
+    (r"\b(?:below|under|less than|lower than)\s+", ">="),
+    (r"\b(?:at least|no less than)\s+", "<"),
+    (r"\b(?:at most|no more than)\s+", ">"),
+    (r"\b(?:equal to|equals)\s+", "!="),
+]
+
+_MISSING_PAT = _re.compile(
+    r"\b(?:missing|absent|blank|empty)\b|\bis\s+missing\b", _re.IGNORECASE)
+_ONE_OF_PAT = _re.compile(
+    r"\b(?:one of|in)\s+(?:the\s+)?(?:set\s+)?[\[{(]?(.+?)[\]})]?\s*$",
+    _re.IGNORECASE)
+_NOT_PAT = _re.compile(r"\b(?:not|isn'?t|is not)\b", _re.IGNORECASE)
+
+
+def _find_field(text: str) -> tuple[Optional[str], int, int]:
+    """Longest-synonym match -> (field, start, end) or (None, -1, -1)."""
+    low = text.lower()
+    for syn in _SYNONYM_ORDER:
+        idx = low.find(syn)
+        if idx >= 0:
+            return _FIELD_SYNONYMS[syn], idx, idx + len(syn)
+    return None, -1, -1
+
+
+def _parse_value(token: str):
+    """'36', '36.5', '0' -> float; 'current' -> str; strips % and commas."""
+    t = token.strip().rstrip("%").replace(",", "").strip()
+    try:
+        return float(t) if "." in t else int(t)
+    except ValueError:
+        return t.strip("'\"")
+
+
+def _compile_clause(clause: str) -> tuple[dict, list[str]]:
+    """One violation clause -> PASS-predicate DSL node + parse notes."""
+    notes: list[str] = []
+    field, _, after = _find_field(clause)
+    if field is None:
+        raise ValueError(f"no recognised field in: {clause!r}")
+    rest = clause[after:].strip()
+    notes.append(f"field={field}")
+
+    # -- missing / blank field: violation is null-ness, PASS is not_null --
+    if _MISSING_PAT.search(rest) or _MISSING_PAT.search(clause[:_find_field(clause)[1]] or ""):
+        return ({"type": "func", "name": "not_null",
+                 "args": [{"type": "field", "name": field}]},
+                notes + ["violation=missing field"])
+
+    tail = _re.sub(r"^\s*(?:is|are|was|were|must be|should be|to be)?\s*",
+                   "", rest, flags=_re.IGNORECASE).strip()
+
+    # -- set membership, both directions --
+    m = _ONE_OF_PAT.search(tail)
+    if m:
+        raw_items = [x.strip(" '\"") for x in m.group(1).split(",") if x.strip()]
+        in_set_node = {"type": "func", "name": "in_set",
+                       "args": [{"type": "field", "name": field},
+                                {"type": "literal", "value": raw_items}]}
+        if _NOT_PAT.search(tail):
+            # violation: value NOT in the set -> PASS: value in set
+            return in_set_node, notes + [f"violation=not in {raw_items}"]
+        # violation: value IN the set -> PASS: value not in set
+        return ({"type": "not", "operand": in_set_node},
+                notes + [f"violation=in {raw_items}"])
+
+    # -- simple equality / inequality --
+    m = _re.match(r"^(?:is\s+)?(not\s+)?(?:equal\s+to\s+|equals\s+)?(.+?)\s*$",
+                  tail, flags=_re.IGNORECASE)
+    if m and m.group(1):   # explicit "not X"
+        return ({"type": "comparison", "operator": "==",
+                 "left": {"type": "field", "name": field},
+                 "right": {"type": "literal", "value": _parse_value(m.group(2))}},
+                notes + [f"violation=!={m.group(2)}"])
+
+    # -- ordered comparisons --
+    for pat, pass_op in _VIOLATION_TO_PASS:
+        m = _re.search(pat, tail, flags=_re.IGNORECASE)
+        if m:
+            value = _parse_value(tail[m.end():])
+            return ({"type": "comparison", "operator": pass_op,
+                     "left": {"type": "field", "name": field},
+                     "right": {"type": "literal", "value": value}},
+                    notes + [f"violation op -> PASS {pass_op} {value!r}"])
+
+    # -- bare "X 36" or "X is 36" treated as exact-match violation --
+    value = _parse_value(m.group(2)) if m else None
+    if value is not None:
+        return ({"type": "comparison", "operator": "!=",
+                 "left": {"type": "field", "name": field},
+                 "right": {"type": "literal", "value": value}},
+                notes + [f"violation=!={value!r}"])
+
+    raise ValueError(f"could not interpret the condition after {field!r}: {rest!r}")
+
+
+def _suggest_rule_code(field: str, node: dict) -> str:
+    """CUSTOM_<FIELD>_<KIND>[_N] -- unique-ified by the caller if taken."""
+    kind = "MISSING"
+    if node["type"] == "comparison":
+        kind = {"<=": "MAX", ">=": "MIN", "<": "BELOW", ">": "ABOVE",
+                "==": "IS_NOT", "!=": "MUST_EQUAL"}[node["operator"]]
+        val = node["right"]["value"]
+        kind = f"{kind}_{str(val).replace('.', '_').replace('-', 'NEG')}"
+    elif node["type"] == "not":
+        kind = "NOT_IN_SET"
+    elif node["type"] == "func" and node["name"] == "in_set":
+        kind = "IN_SET"
+    code = "CUSTOM_" + field.upper() + "_" + kind
+    return _re.sub(r"[^A-Z0-9_]", "_", code)[:60]
+
+
+def generate_rule_draft(nl_text: str) -> dict:
+    """Compile a reviewer's English sentence into a rule draft.
+
+    Deterministic stub: no model call, every output traceable to a regex
+    decision recorded in `parse_notes`. Returns the draft ready for
+    POST /api/rules/preview then /api/rules publish.
+    """
+    text = (nl_text or "").strip()
+    if not text:
+        raise ValueError("empty rule description")
+
+    # Split on AND (case-insensitive, word boundary) into clauses.
+    clauses = [c.strip(" .") for c in _re.split(r"\s+and\s+", text,
+                                               flags=_re.IGNORECASE) if c.strip()]
+    nodes, notes = [], []
+    for c in clauses:
+        node, n = _compile_clause(c)
+        nodes.append(node)
+        notes.extend(n)
+
+    if len(nodes) == 1:
+        condition = nodes[0]
+    else:
+        condition = {"type": "and", "operands": nodes}
+
+    # Which fields does the rule touch? Drives severity suggestion.
+    def _fields(n, acc):
+        if isinstance(n, dict):
+            if n.get("type") == "field":
+                acc.append(n["name"])
+            for v in n.values():
+                if isinstance(v, (dict, list)):
+                    _fields(v, acc)
+        elif isinstance(n, list):
+            for x in n:
+                _fields(x, acc)
+        return acc
+
+    touched = sorted(set(_fields(condition, [])))
+    high = [f for f in touched if f in _HIGH_IMPACT_FIELDS]
+    if "loan_id" in touched or "original_principal" in touched:
+        severity = "CRITICAL"
+    elif high:
+        severity = "HIGH"
+    else:
+        severity = "MEDIUM"
+
+    # Deterministic confidence: recognised field (+), compiled condition (+),
+    # single unambiguous clause (+), all-clauses-parsed (+).
+    confidence = 0.5
+    confidence += 0.15 if touched else 0.0
+    confidence += 0.15
+    confidence += 0.1 if len(nodes) == 1 else 0.05
+    confidence = round(min(confidence, 0.95), 2)
+
+    primary_field = touched[0] if touched else "record"
+    rule_code = _suggest_rule_code(primary_field, nodes[0])
+
+    return {
+        "rule_code": rule_code,
+        "scope": "row",          # dataset-scope rules are out of stub scope
+        "severity": severity,
+        "condition": condition,
+        "message_template": f"{primary_field} {{{primary_field}}} violates: {text}",
+        "natural_language_source": text,
+        "explanation": (
+            "Compiled from the reviewer's description by deterministic-stub-v1. "
+            "Conditions are PASS predicates: the rule fires when the complement "
+            "of this tree evaluates false on a record."),
+        "fields_referenced": touched,
+        "suggested_severity": severity,
+        "confidence": confidence,
+        "confidence_breakdown": {
+            "field_recognised": 0.15 if touched else 0.0,
+            "condition_compiled": 0.15,
+            "single_clause": 0.1 if len(nodes) == 1 else 0.05,
+            "base": 0.5,
+        },
+        "parse_notes": notes,
+        "ai_metadata": _ai_metadata(),
+    }
