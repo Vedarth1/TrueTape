@@ -185,9 +185,13 @@ function AiRecommendations({ recs }) {
     byType.set(rec.action_type, list)
   }
   if (byType.size === 0) return null
+  const order = Object.keys(AI_TYPE_META)
+  const sortedTypes = [...byType.entries()].sort(
+    (a, b) => (order.indexOf(a[0]) + 1 || 99) - (order.indexOf(b[0]) + 1 || 99)
+  )
   return (
     <div className="space-y-4">
-      {[...byType.entries()].map(([type, list]) => {
+      {sortedTypes.map(([type, list]) => {
         const sorted = [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         const meta = AI_TYPE_META[type] ?? { title: type }
         return (
@@ -226,6 +230,10 @@ function ResolveForm({ exc, onDone }) {
   // Latest AI recommendation that actually proposes a correction.
   const aiSuggestion = [...(exc.ai_recommendations ?? [])]
     .filter((r) => r.suggested_field && r.suggested_value != null && r.suggested_value !== '')
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+
+  const aiNote = [...(exc.ai_recommendations ?? [])]
+    .filter((r) => r.action_type === 'reviewer_note' && r.note_text)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
 
   function useAiFix() {
@@ -267,10 +275,12 @@ function ResolveForm({ exc, onDone }) {
   const needsChanges = action === 'edit' || action === 'manual_resolution'
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        Resolve this exception
+    <div className="overflow-hidden rounded-xl border-2 border-violet-300 bg-white shadow-md">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b border-violet-100 bg-violet-50 px-5 py-3">
+        <span className="text-sm font-semibold text-violet-900">Resolve this exception</span>
+        <span className="text-xs text-violet-500">record your decision — nothing is saved until you press Record decision</span>
       </div>
+      <div className="p-5">
 
       {!aiSuggestion && (
         <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
@@ -397,12 +407,28 @@ function ResolveForm({ exc, onDone }) {
         </label>
       )}
 
+      {aiNote && (
+        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-emerald-700">AI-drafted comment</span>
+            <button
+              type="button"
+              onClick={() => setComment(aiNote.note_text)}
+              className="rounded-lg border border-emerald-400 bg-white px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50"
+            >
+              Use this comment
+            </button>
+          </div>
+          <p className="mt-1 text-sm italic text-slate-600">“{aiNote.note_text}”</p>
+        </div>
+      )}
+
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Decision comment (stored in the audit trail)…"
         rows={2}
-        className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900"
+        className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
       />
 
       {resolve.isError && (
@@ -421,10 +447,11 @@ function ResolveForm({ exc, onDone }) {
       <button
         onClick={() => resolve.mutate()}
         disabled={resolve.isPending || (needsChanges && (!fieldName || !afterValue))}
-        className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-3 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {resolve.isPending ? 'Recording…' : 'Record decision'}
       </button>
+      </div>
     </div>
   )
 }
