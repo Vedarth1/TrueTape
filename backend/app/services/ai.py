@@ -67,30 +67,34 @@ _HIGH_IMPACT_FIELDS = {
     "ltv_ratio",
 }
 
+# Loan-identity fields: a defect here breaks joins, dedup, and provenance, so a
+# severity classifier must never ease it below the rule's own assessment.
+_IDENTITY_FIELDS = {"loan_id", "borrower_id"}
+
 
 def _compute_confidence(exc: ExceptionRecord, context: dict) -> tuple[float, dict]:
     type_scores = {
-        "validation_failure": 0.15, "duplicate": 0.20,
-        "source_conflict": 0.10, "staleness": 0.18,
-        "import_error": 0.05,
+        "source_conflict": 0.13, "duplicate": 0.11,
+        "staleness": 0.09, "validation_failure": 0.07,
+        "import_error": 0.04,
     }
-    sev_factors = {"LOW": 0.05, "MEDIUM": 0.10, "HIGH": 0.15, "CRITICAL": 0.20}
+    sev_factors = {"LOW": 0.02, "MEDIUM": 0.03, "HIGH": 0.05, "CRITICAL": 0.07}
 
-    type_f = type_scores.get(exc.exception_type, 0.08)
-    sev_f = sev_factors.get(exc.severity, 0.10)
+    type_f = type_scores.get(exc.exception_type, 0.06)
+    sev_f = sev_factors.get(exc.severity, 0.03)
     field = exc.field_name or ""
-    impact_f = 0.20 if field in _HIGH_IMPACT_FIELDS else 0.08
+    impact_f = 0.10 if field in _HIGH_IMPACT_FIELDS else 0.04
 
     sources = context.get("source_records", [])
     src_sys = {s.get("source_system") for s in sources if s.get("source_system")}
-    evidence_f = 0.20 if len(src_sys) >= 2 else (0.10 if len(src_sys) == 1 else 0.03)
+    evidence_f = 0.22 if len(src_sys) >= 2 else (0.11 if len(src_sys) == 1 else 0.03)
 
     canon = context.get("canonical_data", {}) or {}
-    completeness = (0.15 if canon.get(field) is not None else 0.0) +                   (0.05 if any(s.get("data", {}).get(field) is not None for s in sources) else 0.0)
+    completeness = (0.10 if canon.get(field) is not None else 0.0) +                   (0.05 if any(s.get("data", {}).get(field) is not None for s in sources) else 0.0)
 
-    confidence = round(max(0.0, min(1.0, 0.5 + type_f + sev_f + impact_f + evidence_f + completeness)), 3)
+    confidence = round(max(0.0, min(1.0, 0.25 + type_f + sev_f + impact_f + evidence_f + completeness)), 3)
     return confidence, {
-        "base": 0.5, "type_factor": round(type_f, 3),
+        "base": 0.25, "type_factor": round(type_f, 3),
         "severity_factor": round(sev_f, 3), "impact_factor": round(impact_f, 3),
         "evidence_factor": round(evidence_f, 3), "completeness": round(completeness, 3),
     }
@@ -281,16 +285,32 @@ def classify_severity(exc_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommenda
     exc, ctx = _load_exception_context(exc_id)
     field = exc.field_name or ""
 
-    severity_order = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
-    if field not in _HIGH_IMPACT_FIELDS and severity_order.get(exc.severity, 2) >= 3:
-        suggested = "MEDIUM"
+    order = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+    inv = {1: "LOW", 2: "MEDIUM", 3: "HIGH", 4: "CRITICAL"}
+    dataset_scope = exc.field_name is None
+    material = (field in _HIGH_IMPACT_FIELDS or field in _IDENTITY_FIELDS
+                or dataset_scope)
+    rank = order.get(exc.severity, 2)
+
+    if material:
+        suggested = exc.severity
+        basis = ("a financially material field" if field in _HIGH_IMPACT_FIELDS
+                 else "a loan-identity field" if field in _IDENTITY_FIELDS
+                 else "a dataset-scope / structural check")
+        reasoning = (f"Rule-assigned severity is {exc.severity}. This exception concerns "
+                     f"{basis}, so the rule-assigned severity stands. "
+                     f"Suggested severity: {suggested}.")
+    elif rank >= 3:
+        suggested = inv[max(2, rank - 1)]
+        reasoning = (f"Rule-assigned severity is {exc.severity}, but field '{field}' is "
+                     f"neither financially material nor identity/structural, so the "
+                     f"severity can be eased one level. Suggested severity: {suggested}.")
     else:
         suggested = exc.severity
+        reasoning = (f"Rule-assigned severity is {exc.severity} and field '{field}' is "
+                     f"low-impact; no change warranted. Suggested severity: {suggested}.")
 
     confidence, breakdown = _compute_confidence(exc, ctx)
-    reasoning = (f"Rule-assigned severity is {exc.severity}. Field '{field}' "
-                f"{'is' if field in _HIGH_IMPACT_FIELDS else 'is not'} in the high-impact set. "
-                f"Suggested severity: {suggested}.")
 
     now = datetime.now(timezone.utc)
     rec_id = uuid.uuid4()

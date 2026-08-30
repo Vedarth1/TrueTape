@@ -82,9 +82,10 @@ def _clear_previous(rule_ids):
         ExceptionRecord.rule_id.in_(rule_ids),
         ExceptionRecord.raw_record_id.isnot(None),
         ExceptionRecord.status == "open"))
+    import_ids = db.select(LoanRecord.id).filter(LoanRecord.origin == "import")
     db.session.execute(sa.delete(ValidationResult).filter(
         ValidationResult.rule_id.in_(rule_ids),
-        ValidationResult.loan_record_id.isnot(None)))
+        ValidationResult.loan_record_id.in_(import_ids)))
     return decided
 
 
@@ -111,8 +112,8 @@ def run_row_validation(force=False, now=None):
     # Every version, including the 5 duplicate version-2 rows: those are real
     # rows in the file, and B2's DUPLICATE_LOAN_ID depends on seeing them.
     records = db.session.execute(
-        db.select(LoanRecord).order_by(LoanRecord.source_system,
-                                       LoanRecord.version)
+        db.select(LoanRecord).filter(LoanRecord.origin == "import")
+        .order_by(LoanRecord.source_system, LoanRecord.version)
     ).scalars().all()
 
     result_rows, exceptions = [], []

@@ -126,7 +126,7 @@ def list_loans():
     total = db.session.execute(count_q).scalar()
 
     rows = db.session.execute(
-        q.order_by(Loan.updated_at.desc())
+        q.order_by(Loan.updated_at.desc(), Loan.id.desc())
         .offset((page - 1) * per_page)
         .limit(per_page)
     ).scalars().all()

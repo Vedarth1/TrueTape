@@ -88,10 +88,11 @@ def _coerce_date(v):
     return date.fromisoformat(v).isoformat()   # ISO only; slash-dates -> ValueError
 
 def _coerce_ts(v):                  # last_updated_at: ISO datetime or bare ISO date
+    s = v[:-1] + "+00:00" if isinstance(v, str) and v.endswith("Z") else v
     try:
-        return datetime.fromisoformat(v)
+        return datetime.fromisoformat(s)
     except ValueError:
-        return datetime.combine(date.fromisoformat(v), time.min)
+        return datetime.combine(date.fromisoformat(s), time.min)
 
 def _coerce_status(v):
     key = v.strip().lower()

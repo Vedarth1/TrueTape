@@ -710,6 +710,59 @@ export default function ReviewerQueue() {
     onSuccess: (rec) => setClusterSummary(rec),
   })
 
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [allMatching, setAllMatching] = useState(false)
+  const [gathering, setGathering] = useState(false)
+  const [bulkAction, setBulkAction] = useState(null)
+  const [bulkComment, setBulkComment] = useState('')
+  const [bulkResult, setBulkResult] = useState(null)
+
+  const filterKey = `${clusterFilter ?? ''}|${search.trim()}|${severity}|${excType}|${blockingOnly}`
+  const [selectionKey, setSelectionKey] = useState(filterKey)
+  if (filterKey !== selectionKey) {
+    setSelectionKey(filterKey)
+    setSelectedIds(new Set())
+    setAllMatching(false)
+    setBulkAction(null)
+  }
+
+  const bulkResolve = useMutation({
+    mutationFn: async ({ action, ids, comment }) =>
+      (await api.post('/exceptions/batch', {
+        action,
+        exception_ids: [...ids],
+        comment: comment || undefined,
+      })).data,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exceptions'] })
+      queryClient.invalidateQueries({ queryKey: ['clusters'] })
+      queryClient.invalidateQueries({ queryKey: ['summary'] })
+      setBulkResult(data)
+      setSelectedIds(new Set())
+      setAllMatching(false)
+      setBulkAction(null)
+      setBulkComment('')
+    },
+  })
+
+  async function selectAllMatching() {
+    setGathering(true)
+    try {
+      const ids = new Set()
+      for (let p = 1; p <= 25; p += 1) {
+        const { data } = await api.get('/exceptions', {
+          params: { ...params, status: 'open', page: p, per_page: 200 },
+        })
+        for (const e of data.exceptions ?? []) ids.add(e.id)
+        if (p >= (data.pagination?.pages ?? 1)) break
+      }
+      setSelectedIds(ids)
+      setAllMatching(true)
+    } finally {
+      setGathering(false)
+    }
+  }
+
   if (selected) {
     return <ExceptionDetailPage excId={selected} onBack={() => setSelected(null)} />
   }
@@ -717,6 +770,34 @@ export default function ReviewerQueue() {
   const clusterRows = clusters.data?.clusters ?? []
   const rows = queue.data?.exceptions ?? []
   const pg = queue.data?.pagination
+  const openPageIds = rows.filter((r) => r.status === 'open').map((r) => r.id)
+  const allPageSelected = openPageIds.length > 0 && openPageIds.every((id) => selectedIds.has(id))
+  const somePageSelected = openPageIds.some((id) => selectedIds.has(id))
+
+  function toggleRow(id) {
+    setAllMatching(false)
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  function togglePage() {
+    setAllMatching(false)
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allPageSelected) openPageIds.forEach((id) => next.delete(id))
+      else openPageIds.forEach((id) => next.add(id))
+      return next
+    })
+  }
+  function clearSelection() {
+    setSelectedIds(new Set())
+    setAllMatching(false)
+    setBulkAction(null)
+    setBulkComment('')
+  }
 
   return (
     <div className="space-y-5">
@@ -731,15 +812,41 @@ export default function ReviewerQueue() {
           {batchVerify.isPending ? 'Verifying…' : 'Verify all eligible loans'}
         </button>
       </div>
-      {batchVerify.isSuccess && (
-        <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Batch done — verified {batchVerify.data?.data?.verified ?? 0} loans
-          {batchVerify.data?.data?.skipped ? `, skipped ${batchVerify.data.data.skipped}` : ''}.
-          {batchVerify.data?.data?.errors?.length > 0 && ` ${batchVerify.data.data.errors.length} errors.`}
-        </div>
-      )}
+      {batchVerify.isSuccess && (() => {
+        const r = batchVerify.data?.data ?? {}
+        const upToDate = r.verified === 0 && r.eligible_seen === 0
+        return (
+          <div className={`rounded-lg px-3 py-2 text-sm ${
+            r.errors?.length ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-700'}`}>
+            {upToDate ? (
+              <>
+                Nothing new to verify — {r.already_verified} loans already have verified
+                records{r.blocked ? `, and ${r.blocked} are still blocked by open blocking exceptions`
+                  : ''}. Resolve blocking exceptions to make more loans eligible.
+              </>
+            ) : (
+              <>
+                Batch done — verified <span className="font-semibold">{r.verified}</span> loans.
+                {r.already_verified ? ` ${r.already_verified} were already verified.` : ''}
+                {r.blocked ? ` ${r.blocked} remain blocked by open exceptions.` : ''}
+                {r.errors?.length ? ` ${r.errors.length} errors.` : ''}
+              </>
+            )}
+          </div>
+        )
+      })()}
       {batchVerify.isError && (
         <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{batchVerify.error.message}</div>
+      )}
+      {bulkResult && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <span>
+            Batch {bulkResult.action === 'accept' ? 'accepted' : 'rejected'} — resolved{' '}
+            <span className="font-semibold">{bulkResult.exceptions_resolved}</span>{' '}
+            exception{bulkResult.exceptions_resolved === 1 ? '' : 's'} in one hash-chained batch.
+          </span>
+          <button onClick={() => setBulkResult(null)} className="text-xs text-emerald-600 underline">dismiss</button>
+        </div>
       )}
 
       {/* cluster cards */}
@@ -853,6 +960,92 @@ export default function ReviewerQueue() {
         <span className="self-center text-xs text-slate-400">{pg?.total ?? 0} exceptions</span>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-semibold">{selectedIds.size} selected</span>
+              {allMatching ? (
+                <span className="text-slate-300">· all open exceptions matching this filter</span>
+              ) : pg && pg.pages > 1 ? (
+                <button
+                  onClick={selectAllMatching}
+                  disabled={gathering}
+                  className="rounded-md border border-slate-500 px-2 py-0.5 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                >
+                  {gathering ? 'Selecting…' : 'Select all matching this filter'}
+                </button>
+              ) : null}
+              <button
+                onClick={clearSelection}
+                className="text-xs text-slate-400 underline-offset-2 hover:text-white hover:underline"
+              >
+                clear
+              </button>
+            </div>
+            {!bulkAction && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setBulkResult(null); setBulkAction('accept') }}
+                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"
+                >
+                  Accept {selectedIds.size}
+                </button>
+                <button
+                  onClick={() => { setBulkResult(null); setBulkAction('reject') }}
+                  className="rounded-lg bg-red-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-400"
+                >
+                  Reject {selectedIds.size}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {bulkAction && (
+            <div className="mt-3 rounded-lg bg-slate-800 p-3">
+              <div className="text-sm text-slate-100">
+                {bulkAction === 'accept' ? (
+                  <>Confirm each of these <span className="font-semibold">{selectedIds.size}</span> exceptions as a real defect and close it — no data is corrected (use Edit on a single exception for that).</>
+                ) : (
+                  <>Mark each of these <span className="font-semibold">{selectedIds.size}</span> exceptions as not a real defect and close it.</>
+                )}{' '}
+                Each gets its own hash-chained decision under one batch. This can’t be undone.
+              </div>
+              <input
+                value={bulkComment}
+                onChange={(e) => setBulkComment(e.target.value)}
+                placeholder="Reason / comment (recorded on every decision)…"
+                className="mt-2 w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-slate-400"
+              />
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => bulkResolve.mutate({ action: bulkAction, ids: selectedIds, comment: bulkComment })}
+                  disabled={bulkResolve.isPending}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium text-white transition disabled:opacity-40 ${
+                    bulkAction === 'accept' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-red-500 hover:bg-red-400'
+                  }`}
+                >
+                  {bulkResolve.isPending ? 'Working…' : `Confirm ${bulkAction} ${selectedIds.size}`}
+                </button>
+                <button
+                  onClick={() => setBulkAction(null)}
+                  disabled={bulkResolve.isPending}
+                  className="rounded-lg border border-slate-500 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {bulkResolve.isError && (
+            <div className="mt-2 rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-200">
+              {bulkResolve.error.message}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {queue.isLoading ? (
@@ -866,6 +1059,17 @@ export default function ReviewerQueue() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
               <tr>
+                <th className="w-10 px-4 py-2">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    ref={(el) => { if (el) el.indeterminate = !allPageSelected && somePageSelected }}
+                    onChange={togglePage}
+                    disabled={openPageIds.length === 0}
+                    title="Select all open exceptions on this page"
+                    className="h-4 w-4 rounded border-slate-300 align-middle"
+                  />
+                </th>
                 <th className="px-4 py-2 font-medium">Severity</th>
                 <th className="px-4 py-2 font-medium">Exception</th>
                 <th className="px-4 py-2 font-medium">Loan</th>
@@ -879,8 +1083,19 @@ export default function ReviewerQueue() {
                 <tr
                   key={e.id}
                   onClick={() => setSelected(e.id)}
-                  className="cursor-pointer hover:bg-slate-50"
+                  className={`cursor-pointer hover:bg-slate-50 ${selectedIds.has(e.id) ? 'bg-violet-50/70' : ''}`}
                 >
+                  <td className="px-4 py-2.5" onClick={(ev) => ev.stopPropagation()}>
+                    {e.status === 'open' && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(e.id)}
+                        onChange={() => toggleRow(e.id)}
+                        title="Select this exception"
+                        className="h-4 w-4 rounded border-slate-300 align-middle"
+                      />
+                    )}
+                  </td>
                   <td className="px-4 py-2.5">
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${SEV_STYLES[e.severity] ?? 'bg-slate-100'}`}>
                       {e.severity}

@@ -514,6 +514,11 @@ def verify_eligible_loans(reviewer_id: uuid.UUID, limit: int = 0) -> dict:
         "verified": verified,
         "skipped": skipped,
         "errors": errors,
+        # Why the batch may be zero-sized: everything either already has a
+        # verified record or is still blocked by an open blocking exception.
+        "already_verified": len(already_verified),
+        "blocked": len(blocked_loan_ids),
+        "eligible_seen": len(loans),
     }
 
 
