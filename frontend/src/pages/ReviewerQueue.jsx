@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
-import { formatValue, humanize, fieldLabel, fmtMoney, isMoney, isEmptyish, isNoisyKey } from '../lib/format'
+import { formatValue, humanize, fieldLabel, fmtMoney, isMoney, isEmptyish, isNoisyKey, FIELD_LABELS } from '../lib/format'
 
 function fmtSuggested(field, value) {
   if (value == null || value === '') return null
@@ -218,7 +218,7 @@ function ResolveForm({ exc, onDone }) {
   const [action, setAction] = useState('accept')
   const [comment, setComment] = useState('')
   const [requestCorrection, setRequestCorrection] = useState(false)
-  const [fieldName, setFieldName] = useState(exc.field_name ?? '')
+  const [fieldName, setFieldName] = useState(exc.field_name ?? '')  // pre-blame the field the rule flagged
   const [afterValue, setAfterValue] = useState('')
   const [aiRef, setAiRef] = useState(null)          // rec id the decision responds to
   const [aiVerdict, setAiVerdict] = useState(null)  // 'accepted' | 'dismissed'
@@ -276,9 +276,11 @@ function ResolveForm({ exc, onDone }) {
         <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
           {exc.rule_code?.startsWith('DUPLICATE_') || exc.rule_code?.startsWith('REPEATED_')
             ? 'No AI correction is suggested here — this is a dataset-level check (rows compared against other rows), so the decision is about the records, not a field value.'
-            : exc.exception_type === 'source_conflict'
+            : exc.exception_type === 'source_conflict' && (exc.ai_recommendations ?? []).every((r) => r.action_type !== 'explain_failure')
               ? 'Run “Analyze failure” above and the AI will recommend the most-trusted source value for the conflicting field.'
-              : 'No AI correction suggested yet. Run “Analyze failure” above — if any source holds a valid alternative, the AI will propose it here for one-click acceptance.'}
+              : (exc.ai_recommendations ?? []).some((r) => r.action_type === 'explain_failure')
+                ? 'The AI analyzed this exception and found no valid alternative in any source — every source repeats the same missing or invalid value, so a manual correction is required. Use “Edit value” below to supply the correct one.'
+                : 'Run “Analyze failure” above — the AI explains the failure and, if any source holds a valid alternative, proposes it here for one-click acceptance.'}
         </div>
       )}
 
@@ -363,8 +365,11 @@ function ResolveForm({ exc, onDone }) {
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="">Select field to correct…</option>
-            {(exc.canonical_data ? Object.keys(exc.canonical_data) : []).map((f) => (
-              <option key={f} value={f}>{f}</option>
+            {(exc.canonical_data && Object.keys(exc.canonical_data).length
+              ? Object.keys(exc.canonical_data)
+              : Object.keys(FIELD_LABELS)
+            ).map((f) => (
+              <option key={f} value={f}>{fieldLabel(f)}</option>
             ))}
           </select>
           <input

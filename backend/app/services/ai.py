@@ -383,10 +383,20 @@ def summarize_batch(cluster_id: uuid.UUID, reviewer_id: uuid.UUID) -> AiRecommen
             fields.add(e.field_name)
     top_type = max(type_counts, key=type_counts.get)
 
-    summary = (f"Cluster '{cluster.cluster_label}': {len(excs)} exceptions. "
-               f"Primary type: {top_type} ({type_counts[top_type]}). "
-               f"Severity: {sev_counts}. Fields: {', '.join(sorted(fields))}. "
-               f"Review as a group -- {top_type} exceptions often share a root cause.")
+    # Human prose, no raw dicts: severity and type breakdowns render as
+    # "12 CRITICAL" style fragments, fields as a readable list.
+    sev_part = ", ".join(f"{n} {sev}" for sev, n in
+                         sorted(sev_counts.items(), key=lambda kv: -kv[1]))
+    field_part = (", ".join(sorted(fields)) if fields
+                  else "no single field (dataset-level or structural checks)")
+    loans = len({e.loan_id for e in excs if e.loan_id})
+
+    summary = (
+        f"{len(excs)} exceptions share the root cause '{cluster.cluster_label}' "
+        f"across {loans} loans. All are {top_type.replace('_', ' ')} findings "
+        f"— severity mix: {sev_part}. Fields involved: {field_part}. "
+        f"Reviewing them as one group usually resolves a single systematic "
+        f"problem rather than {len(excs)} separate defects.")
 
     now = datetime.now(timezone.utc)
     rec_id = uuid.uuid4()
