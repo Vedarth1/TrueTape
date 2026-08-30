@@ -303,3 +303,40 @@ docker compose exec -T backend flask reconcile-oracle
 - `docs/AI_DEV_LOG.md` — AI development log.
 - `data/seed/generation_summary.json` — QA oracle (215 injected defects) used by `reconcile-oracle`.
 - `data/generate_dataset.py` — regenerate the messy multi-source dataset.
+
+## Deploying on AWS EC2 (Docker, free tier)
+
+The whole stack runs in Docker Compose on a t2.micro (1 GB RAM — add a 2 GB swapfile).
+
+```bash
+# on the instance (Ubuntu 24.04): install docker + compose, clone the repo
+sudo apt update && sudo apt -y install docker.io docker-compose-plugin git make
+sudo usermod -aG docker ubuntu && newgrp docker
+git clone <your-repo-url> ~/TrueTape && cd ~/TrueTape
+
+# secrets: create backend/.env from your local values, but with production settings
+#   APP_ENV=production  JWT_SECRET_KEY=<openssl rand -hex 32>
+#   CORS_ORIGINS=http://<EC2_PUBLIC_IP>:5173
+#   VITE_API_URL=http://<EC2_PUBLIC_IP>:5001/api      (read by the web container)
+
+# open in the AWS security group: 22 (SSH, My IP), 5173, 5001 (HTTP)
+
+docker compose up -d          # db + api + web (db/init creates both PG roles)
+make db-reset                 # migrate -> harden-db -> seed (needs data/seed, committed)
+```
+
+Then load the demo data and you are live:
+
+1. Open `http://<EC2_PUBLIC_IP>:5173` → sign in as operator (`operator@truetape.dev` / `operator123`)
+2. Upload `data/seed/loan_tape.csv`, `servicer_update.csv`, `document_manifest.csv`
+3. Run pipeline (dashboard button, or `docker compose exec backend flask run-pipeline`)
+4. Sign in as reviewer → **Verify all eligible loans**
+
+Gotchas that bit us:
+
+- `data/seed/` must be committed — `flask seed` reads it from the mounted volume
+- `VITE_API_URL` must point at the EC2 IP, not localhost, or the browser cannot reach the API
+- Security group must expose 5173 (UI) and 5001 (API) — or put nginx in front and expose 80
+- Free-tier t2.micro: add a swapfile, and expect ~50 s of latency after idle spin-down only on PaaS; EC2 stays warm
+
+`deploy/DEPLOY_EC2.md` has the alternative no-Docker layout (native Postgres + systemd + nginx).
