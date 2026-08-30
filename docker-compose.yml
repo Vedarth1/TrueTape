@@ -39,7 +39,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: http://localhost:5001/api
+      # On a remote host set VITE_API_URL=http://<host-ip>:5001/api (e.g. in .env)
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5001/api}
     depends_on:
       - backend
 

@@ -1,0 +1,482 @@
+loan_id,current_balance,payment_status,days_past_due,last_updated_at,source_system,servicer_name
+LN-001160,194741.27,Current,0,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000318,208616.82,Current,0,2026-08-15T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000863,135989.4,90+ Days,96,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000666,0.0,Paid Off,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000421,492602.11,Default,181,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000481,377022.69,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000955,270030.71,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000186,452412.68,60-89 Days,70,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000943,0.0,Paid Off,0,2026-08-17T06:30:00Z,ServicerFeed,ServicerX
+LN-000013,336301.88,Current,0,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001103,189329.6,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000872,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000635,458188.67,Current,0,2026-08-21T06:30:00Z,ServicerFeed,ServicerX
+LN-000542,111041.58,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000354,485651.28,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000835,116180.69,90+ Days,120,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000602,525986.84,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000326,358171.44,30-59 Days,47,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000062,99033.48,Current,0,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000426,361351.6,Current,0,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001106,428683.0,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000485,97117.68,30-59 Days,35,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000179,441143.66,60-89 Days,82,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000491,36131.76,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000674,238167.36,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000624,256511.21,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000040,752455.41,60-89 Days,66,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000233,242120.36,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000583,519786.56,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000740,0.0,Closed,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001168,146703.33,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-801210,297348.9,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000926,424064.04,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000055,457789.32,30-59 Days,47,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000785,281216.35,Current,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000370,162337.29,Current,0,2026-08-19T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000131,0.0,Paid Off,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000702,211471.11,60-89 Days,77,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-001113,558921.54,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000905,745490.4,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000391,581226.11,30-59 Days,35,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000005,563320.62,90+ Days,120,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000759,216951.47,Current,0,2026-08-21T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000534,53716.79,Current,0,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001095,159129.7,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000335,146427.77,Current,0,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000561,45171.88,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000479,148751.38,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001159,309135.95,Default,302,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001058,371474.9,90+ Days,127,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000574,320045.0,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000507,501657.04,Current,0,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000112,132931.9,Current,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000302,3646.82,Closed,0,2026-08-24T06:30:00Z,ServicerFeed,ServicerX
+LN-000155,30981.16,Current,0,2026-08-24T06:30:00Z,ServicerFeed,ServicerX
+LN-000960,629420.31,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-001174,244228.08,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000230,314495.63,Current,0,2026-08-19T06:30:00Z,ServicerFeed,ServicerX
+LN-000854,289334.55,30-59 Days,58,2026-08-13T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000972,54410.37,30-59 Days,55,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-001036,602773.89,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000012,91598.2,30-59 Days,57,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000797,697835.97,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000777,0.0,Paid Off,0,2026-08-19T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000560,0.0,Paid Off,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000458,381931.64,Current,0,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000235,310514.27,Default,199,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000709,300195.42,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-001089,294767.83,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000107,169791.63,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000211,615836.47,Current,0,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000783,362961.6,Current,0,2026-08-26T06:30:00Z,ServicerFeed,ServicerX
+LN-000522,446153.37,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000292,458813.4,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-001055,0.0,Paid Off,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000191,0.0,Closed,0,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000677,230201.43,Current,0,2026-08-26T06:30:00Z,ServicerFeed,ServicerX
+LN-000004,203407.7,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000413,613398.15,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000925,655137.81,Current,0,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000095,91639.03,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000236,415306.87,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000981,199014.56,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-801212,290236.16,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000322,325564.85,Current,0,2026-08-08T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000850,462656.59,Current,0,2026-08-21T06:30:00Z,ServicerFeed,ServicerX
+LN-000616,753321.31,30-59 Days,41,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000088,190964.06,Current,0,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000919,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000099,275616.96,30-59 Days,35,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000420,578822.92,Current,0,2026-08-20T06:30:00Z,ServicerFeed,ServicerX
+LN-000064,169109.87,Current,0,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-001059,0.0,Paid Off,0,2026-08-19T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001114,224089.11,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000065,403722.29,90+ Days,145,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-001069,94027.81,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000135,280057.1,Current,0,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000936,299879.23,90+ Days,124,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000329,126426.63,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000829,366500.14,30-59 Days,49,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000309,683666.65,90+ Days,118,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-001091,603732.15,Current,0,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000342,0.0,Paid Off,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000855,361442.66,Current,0,2026-08-15T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000359,314139.38,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000611,773375.86,Default,395,2026-08-17T06:30:00Z,ServicerFeed,ServicerX
+LN-000617,0.0,Paid Off,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001087,55266.46,60-89 Days,79,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000673,657768.5,30-59 Days,34,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-001194,552171.45,Current,0,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001186,240755.9,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-901204,196266.16,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000303,42366.11,Current,0,2026-08-13T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001066,192222.55,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001047,0.0,Paid Off,0,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000700,247887.13,90+ Days,159,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000379,183726.23,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000962,488005.09,30-59 Days,30,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000569,607602.54,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000182,536688.48,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-001158,347169.56,Current,0,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000864,830931.02,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001171,278718.71,60-89 Days,71,2026-08-20T06:30:00Z,ServicerFeed,ServicerX
+LN-901201,581226.11,30-59 Days,41,2026-08-24T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000232,127753.28,Current,0,2026-08-10T06:30:00Z,ServicerFeed,ServicerX
+LN-000794,187233.17,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000226,55393.23,Default,231,2026-08-15T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001198,123836.89,Current,0,2026-08-26T06:30:00Z,ServicerFeed,ServicerX
+LN-000974,0.0,Paid Off,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000837,390116.5,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000808,304111.05,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000273,474620.07,Current,0,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000032,24350.2,Closed,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000068,450679.48,Current,0,2026-08-15T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000275,317439.61,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000035,443491.96,Current,0,2026-08-15T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000496,319756.5,Current,0,2026-08-21T06:30:00Z,ServicerFeed,ServicerX
+LN-000247,89088.59,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000940,141621.33,Current,0,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000117,339456.04,60-89 Days,68,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000361,0.0,90+ Days,136,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000868,695233.05,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000401,144558.29,Current,0,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000546,471984.68,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000579,196062.8,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000556,269233.71,30-59 Days,48,2026-08-23T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000451,387872.03,Default,292,2026-08-24T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000672,506054.43,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000787,331422.88,30-59 Days,36,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001182,506477.34,30-59 Days,40,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000523,202227.04,60-89 Days,88,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000689,381596.31,Current,0,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001000,135214.19,Default,298,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-901203,0.0,Paid Off,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000167,90595.08,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000368,407776.86,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000023,93967.34,Default,371,2026-08-19T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000609,60748.42,Current,0,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000294,584249.95,Current,0,2026-08-24T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000615,55385.25,Current,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001167,250696.15,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000771,342156.96,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000444,579724.69,Current,0,2026-08-19T06:30:00Z,ServicerFeed,ServicerX
+LN-000841,879422.35,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000039,134240.16,Current,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000185,424801.44,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001128,269279.97,90+ Days,162,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000460,596686.07,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000945,0.0,Closed,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000751,125579.92,30-59 Days,59,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000514,162596.54,Current,0,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-000019,508767.08,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000377,411671.04,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000550,350311.63,Current,0,2026-08-18T06:30:00Z,ServicerFeed,ServicerX
+LN-000930,449426.9,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-001197,59033.02,Current,0,2026-08-19T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000121,492224.52,30-59 Days,53,2026-08-19T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000516,282829.67,Default,267,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001149,140182.33,60-89 Days,64,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001133,230381.11,Current,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000001,415944.12,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000136,347764.95,Current,0,2026-08-18T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000946,0.0,Paid Off,0,2026-08-24T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000778,387297.4,Current,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-001164,118176.11,Current,0,2026-08-19T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000250,287325.15,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000387,578924.42,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000328,428612.98,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000137,511433.36,Current,0,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000870,431908.09,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000789,64318.52,Current,0,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000918,660031.96,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000712,530377.25,Current,0,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-801211,187268.78,Current,0,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000044,530957.47,60-89 Days,64,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000363,0.0,Paid Off,0,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000366,309228.56,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000229,0.0,Paid Off,0,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000721,132800.17,60-89 Days,63,2026-08-19T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000788,-35570.18,90+ Days,90,2026-08-26T06:30:00Z,ServicerFeed,ServicerX
+LN-000439,171860.07,30-59 Days,55,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000263,339653.63,Current,0,2026-08-17T06:30:00Z,ServicerFeed,ServicerX
+LN-000518,80133.51,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001032,645332.26,30-59 Days,54,2026-08-21T06:30:00Z,ServicerFeed,ServicerX
+LN-000082,0.0,Closed,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000722,594762.72,Current,0,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001037,39965.53,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000840,0.0,Paid Off,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000454,295698.41,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000814,203303.43,Current,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-001062,304271.37,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000803,685132.83,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000971,325400.58,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000287,55339.9,90+ Days,94,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000701,292156.21,60-89 Days,79,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000017,288583.49,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001025,152151.84,30-59 Days,50,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-000900,322624.39,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001134,298711.07,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000852,54626.87,60-89 Days,83,2026-08-17T06:30:00Z,ServicerFeed,ServicerX
+LN-000724,411855.82,30-59 Days,30,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000280,416368.47,60-89 Days,87,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000866,487457.95,Current,0,2026-08-13T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000904,432103.18,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-001180,380410.06,Current,0,2026-08-13T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000527,233314.08,30-59 Days,48,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000564,384121.29,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000151,609052.6,30-59 Days,52,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000122,437718.49,Current,0,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001015,659296.86,90+ Days,171,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000901,195306.28,Current,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001183,645952.12,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000588,408392.8,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000466,358094.74,60-89 Days,70,2026-08-18T06:30:00Z,ServicerFeed,ServicerX
+LN-000515,569502.13,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000256,271703.65,30-59 Days,59,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000535,0.0,Closed,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000381,640826.19,Current,0,2026-08-08T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000285,438405.99,60-89 Days,85,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000968,661995.59,30-59 Days,38,2026-08-24T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000735,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000991,47407.04,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000424,341375.59,Current,0,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000156,260366.88,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000203,666912.44,Current,0,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001176,179424.7,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000238,0.0,Paid Off,0,2026-08-20T06:30:00Z,ServicerFeed,ServicerX
+LN-000442,0.0,Closed,0,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-001102,213518.33,Current,0,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000393,550394.91,Current,0,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000416,514360.31,60-89 Days,60,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000832,450258.58,Current,0,2026-08-24T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000478,66733.61,30-59 Days,59,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000623,288822.14,Current,0,2026-08-21T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000800,111532.13,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000644,0.0,Paid Off,0,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-001068,507318.7,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-801208,371408.33,Current,0,2026-08-24T06:30:00Z,ServicerFeed,ServicerX
+LN-001139,307754.09,Current,0,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000604,329894.37,Current,0,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000076,262968.82,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000133,724212.17,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000384,694495.32,Current,0,2026-08-24T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000600,685895.84,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000320,154717.2,Default,232,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000585,113657.13,Current,0,2026-08-18T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000842,686207.08,Current,0,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000501,36138.88,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000939,0.0,Paid Off,0,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000881,171625.46,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000914,328028.18,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000687,583684.24,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000932,591745.98,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001190,382095.47,Default,220,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000139,111278.07,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000772,428486.24,Current,0,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-000052,0.0,Closed,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000264,428944.09,Current,0,2026-08-08T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001137,210284.97,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-001187,119571.22,Current,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001199,123308.68,Current,0,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-000399,622855.16,90+ Days,130,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000189,155502.04,Current,0,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000170,448817.93,Current,0,2026-08-18T06:30:00Z,ServicerFeed,ServicerX
+LN-000967,639413.08,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000582,243731.62,Default,264,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000639,343833.96,Current,0,2026-08-15T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000132,489002.9,Current,0,2026-08-15T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001151,697065.72,60-89 Days,68,2026-08-21T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000396,114396.91,60-89 Days,73,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000430,760267.3,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000411,282190.06,Current,0,2026-08-26T06:30:00Z,ServicerFeed,ServicerX
+LN-000075,165162.83,Current,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000468,446697.57,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000587,451471.57,30-59 Days,41,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001196,211478.58,Current,0,2026-08-24T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000951,164053.69,Current,0,2026-08-14T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001092,506044.53,Current,0,2026-08-18T06:30:00Z,ServicerFeed,ServicerX
+LN-000194,242677.29,Current,0,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-000356,116908.92,Current,0,2026-08-18T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000389,304928.7,Current,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000629,578220.62,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001054,0.0,60-89 Days,66,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000620,508675.0,90+ Days,142,2026-08-10T06:30:00Z,ServicerFeed,ServicerX
+LN-000678,516707.53,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000846,525567.22,Current,0,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000159,148170.75,Current,0,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-000607,384002.08,Current,0,2026-08-24T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000760,640238.78,Default,243,2026-08-26T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000622,479777.25,Current,0,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000816,1041062.74,60-89 Days,88,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000757,148994.22,30-59 Days,34,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000566,408786.17,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000255,269477.51,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000221,0.0,Paid Off,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000331,197405.57,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000775,308578.97,90+ Days,98,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000571,585754.57,Current,0,2026-08-20T06:30:00Z,ServicerFeed,ServicerX
+LN-000758,309870.33,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000493,517144.22,Current,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000970,0.0,Closed,0,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001162,100051.15,90+ Days,152,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000532,704910.64,60-89 Days,86,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001165,371597.12,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000733,180282.24,30-59 Days,47,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000512,647969.23,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000465,494546.85,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000630,531103.87,Current,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000192,69470.33,30-59 Days,31,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001028,253338.94,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000805,233350.86,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000448,280297.0,Default,257,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001163,90163.02,Current,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000310,98495.11,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000125,292941.58,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000254,231657.16,Current,0,2026-08-08T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000262,457566.93,30-59 Days,34,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000928,246527.67,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000177,0.0,90+ Days,124,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000051,536549.73,30-59 Days,55,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-000540,147163.27,60-89 Days,62,2026-08-19T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000957,93386.82,60-89 Days,89,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000259,611584.8,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000627,442280.46,90+ Days,156,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000838,334113.09,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000873,152024.51,30-59 Days,36,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000098,583401.08,Current,0,2026-08-17T06:30:00Z,ServicerFeed,ServicerX
+LN-000338,0.0,Closed,0,2026-08-25T06:30:00Z,ServicerFeed,ServicerX
+LN-000205,318065.92,Current,0,2026-08-23T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000899,378351.68,Current,0,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000545,203645.07,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000769,0.0,Paid Off,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000195,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-001011,35642.99,60-89 Days,81,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-000618,85875.71,Unknown,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000087,151855.5,60-89 Days,60,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000902,103992.46,Current,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000130,102698.44,Current,0,2026-08-07T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000958,129041.77,Current,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000011,371889.59,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000031,0.0,Closed,0,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-001144,473645.55,Current,0,2026-08-21T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000069,485409.33,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000298,95837.63,30-59 Days,58,2026-08-21T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000306,283428.46,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000869,262612.1,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-001104,123617.0,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000679,367458.49,60-89 Days,84,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001012,584302.68,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-801207,298154.77,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000412,771638.38,90+ Days,146,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000982,49343.93,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000636,0.0,Paid Off,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000747,664826.16,Current,0,2026-08-21T06:30:00Z,ServicerFeed,ServicerX
+LN-000770,293629.38,30-59 Days,55,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000903,478938.66,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000817,710705.02,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000314,335609.24,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000764,372397.05,Current,0,2026-08-14T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001064,662390.88,Default,325,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000682,700987.33,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000234,129339.39,Default,288,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-001076,397742.59,Current,0,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-000293,0.0,Closed,0,2026-08-19T02:14:00Z,ServicerFeed,MeridianServicing
+LN-000754,198678.97,Current,0,2026-08-23T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000923,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000073,394328.71,30-59 Days,58,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000223,171383.75,30-59 Days,48,2026-08-21T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001112,695206.97,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001130,-23198.12,Current,0,2026-08-13T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000018,123537.57,Default,195,2026-08-18T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000210,466521.31,30-59 Days,38,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000533,755025.94,Current,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000593,762429.88,Current,0,2026-08-08T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000883,432200.46,Current,0,2026-08-18T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000332,55217.4,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000966,244681.18,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000655,229181.75,Current,0,2026-08-09T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001166,477316.2,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000486,79360.88,Current,0,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-001029,472889.43,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000034,0.0,Paid Off,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000610,121693.04,Current,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000632,484414.24,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-000558,598046.37,Current,0,2026-08-21T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000449,561950.16,Current,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000664,356859.73,Current,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000861,188412.24,Current,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000692,708544.26,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000395,630924.75,Current,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000844,238025.91,Current,0,2026-08-22T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000164,630607.05,Current,0,2026-08-11T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000766,179424.55,Current,0,2026-08-24T06:30:00Z,ServicerFeed,ServicerX
+LN-000688,683605.88,Current,0,2026-08-19T06:30:00Z,ServicerFeed,ServicerX
+LN-000720,195752.97,Current,0,2026-08-23T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000934,182582.5,60-89 Days,87,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000305,169460.09,Current,0,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000920,0.0,Paid Off,0,2026-08-09T06:30:00Z,ServicerFeed,ServicerX
+LN-000340,485648.68,60-89 Days,89,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000640,312826.39,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000732,513922.12,Current,0,2026-08-06T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000669,670194.26,30-59 Days,54,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001111,504875.18,Current,0,2026-08-22T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000057,525948.79,30-59 Days,56,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000536,529374.63,Current,0,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-000188,291291.7,30-59 Days,42,2026-08-14T06:30:00Z,ServicerFeed,ServicerX
+LN-000241,404487.94,Current,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000347,394671.58,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-000239,148771.99,Current,0,2026-08-08T06:30:00Z,ServicerFeed,ServicerX
+LN-001079,606258.28,Current,0,2026-08-19T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000977,0.0,Closed,0,2026-08-10T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000941,131029.61,Current,0,2026-08-17T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000440,723332.49,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000961,293598.3,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000628,783181.37,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000105,414510.6,60-89 Days,66,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000642,86991.98,Current,0,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000269,169122.5,Current,0,2026-08-12T06:30:00Z,ServicerFeed,ServicerX
+LN-000577,160822.56,Current,0,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-001020,782102.42,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000414,139362.9,Current,0,2026-08-16T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000129,86765.42,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000938,256174.83,Current,0,2026-08-16T06:30:00Z,ServicerFeed,ServicerX
+LN-000563,427267.11,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000826,576304.88,Current,0,2026-08-07T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001063,0.0,Paid Off,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001153,0.0,Closed,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000415,246934.85,Current,0,2026-08-25T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000551,341992.82,Current,0,2026-08-15T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001116,145417.34,Current,0,2026-08-23T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000847,58656.06,Default,197,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001125,98635.49,Current,0,2026-08-17T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000490,741538.52,30-59 Days,50,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001098,418513.5,60-89 Days,80,2026-08-19T02:14:00Z,ServicerFeed,ServicerX
+LN-000376,297684.14,Current,0,2026-08-16T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000253,147422.31,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000648,69084.49,Paid Off,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000003,0.0,Closed,0,2026-08-23T06:30:00Z,ServicerFeed,ServicerX
+LN-000463,0.0,Paid Off,0,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-001200,353443.64,Current,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000422,100460.46,Current,0,2026-08-25T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000748,0.0,Paid Off,0,2026-08-12T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000103,319107.32,Current,0,2026-08-09T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000543,0.0,Closed,0,2026-08-22T06:30:00Z,ServicerFeed,ServicerX
+LN-001048,575559.75,Current,0,2026-08-06T06:30:00Z,ServicerFeed,ServicerX
+LN-000590,614322.52,60-89 Days,68,2026-08-06T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000344,424138.63,Current,0,2026-08-15T06:30:00Z,ServicerFeed,ServicerX
+LN-001075,418578.54,Current,0,2026-08-10T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000157,464054.91,Current,0,2026-08-18T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001156,815170.54,Current,0,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-000662,655986.64,Current,0,2026-08-26T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000299,212260.94,Current,0,2026-08-13T06:30:00Z,ServicerFeed,ServicerX
+LN-000007,285029.58,30-59 Days,43,2026-08-19T02:14:00Z,ServicerFeed,AtlasLoanCare
+LN-000944,76152.43,Current,0,2026-08-20T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000895,206863.75,Current,0,2026-08-07T06:30:00Z,ServicerFeed,ServicerX
+LN-000316,515644.14,Current,0,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-001161,106230.17,30-59 Days,46,2026-08-11T06:30:00Z,ServicerFeed,ServicerX
+LN-000265,601469.31,Current,0,2026-08-20T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-000124,318640.32,90+ Days,164,2026-08-15T06:30:00Z,ServicerFeed,MeridianServicing
+LN-000168,465429.6,Current,0,2026-08-11T06:30:00Z,ServicerFeed,AtlasLoanCare
+LN-001023,546937.21,Current,0,2026-08-12T06:30:00Z,ServicerFeed,MeridianServicing

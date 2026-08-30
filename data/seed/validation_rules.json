@@ -1,0 +1,160 @@
+[
+  {
+    "rule_code": "REQUIRED_CORE_FIELDS", "version": 1, "scope": "row", "severity": "CRITICAL",
+    "message_template": "Missing a core field (loan_id / original_principal / origination_date).",
+    "explanation": "A loan record is unusable without an identifier, a principal, and an origination date.",
+    "condition": {"type": "and", "operands": [
+      {"type": "func", "name": "not_null", "args": [{"type": "field", "name": "loan_id"}]},
+      {"type": "func", "name": "not_null", "args": [{"type": "field", "name": "original_principal"}]},
+      {"type": "func", "name": "not_null", "args": [{"type": "field", "name": "origination_date"}]}
+    ]}
+  },
+  {
+    "rule_code": "DUPLICATE_LOAN_ID", "version": 1, "scope": "dataset", "severity": "HIGH",
+    "message_template": "loan_id {loan_id} appears more than once in the same file.",
+    "explanation": "Two rows in one source claiming the same loan_id is a boarding error.",
+    "condition": {"check": "duplicate_key", "keys": ["loan_id"], "partition_by": "raw_file_id"}
+  },
+  {
+    "rule_code": "DUPLICATE_BORROWER_FINGERPRINT", "version": 1, "scope": "dataset", "severity": "HIGH",
+    "message_template": "Same borrower + principal + origination date under a different loan_id — likely a duplicate.",
+    "explanation": "Fingerprints on borrower_name + original_principal + origination_date so it still fires when the duplicate carries a fresh borrower_id.",
+    "condition": {"check": "fingerprint_duplicate", "keys": ["borrower_name", "original_principal", "origination_date"], "partition_by": "global"}
+  },
+  {
+    "rule_code": "INVALID_DATE_FORMAT", "version": 1, "scope": "row", "severity": "MEDIUM",
+    "message_template": "A date field could not be parsed.",
+    "explanation": "Fails if origination_date, maturity_date, or last_updated_at failed type coercion during normalization.",
+    "condition": {"type": "and", "operands": [
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "origination_date"}]}},
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "maturity_date"}]}},
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "last_updated_at"}]}}
+    ]}
+  },
+  {
+    "rule_code": "INVALID_NUMERIC_FORMAT", "version": 1, "scope": "row", "severity": "MEDIUM",
+    "message_template": "A numeric field could not be parsed.",
+    "explanation": "Fails if original_principal, current_balance, or interest_rate failed type coercion during normalization.",
+    "condition": {"type": "and", "operands": [
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "original_principal"}]}},
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "current_balance"}]}},
+      {"type": "not", "operand": {"type": "func", "name": "field_error", "args": [{"type": "field", "name": "interest_rate"}]}}
+    ]}
+  },
+  {
+    "rule_code": "MATURITY_AFTER_ORIGINATION", "version": 1, "scope": "row", "severity": "HIGH",
+    "message_template": "maturity_date {maturity_date} is not after origination_date {origination_date}.",
+    "explanation": "A loan cannot mature on or before it originates.",
+    "condition": {"type": "comparison", "operator": ">", "left": {"type": "field", "name": "maturity_date"}, "right": {"type": "field", "name": "origination_date"}}
+  },
+  {
+    "rule_code": "NON_NEGATIVE_PRINCIPAL", "version": 1, "scope": "row", "severity": "CRITICAL",
+    "message_template": "original_principal {original_principal} is negative.",
+    "explanation": "Original principal cannot be below zero.",
+    "condition": {"type": "comparison", "operator": ">=", "left": {"type": "field", "name": "original_principal"}, "right": {"type": "literal", "value": 0}}
+  },
+  {
+    "rule_code": "NON_NEGATIVE_BALANCE", "version": 1, "scope": "row", "severity": "CRITICAL",
+    "message_template": "current_balance {current_balance} is negative.",
+    "explanation": "Current balance cannot be below zero.",
+    "condition": {"type": "comparison", "operator": ">=", "left": {"type": "field", "name": "current_balance"}, "right": {"type": "literal", "value": 0}}
+  },
+  {
+    "rule_code": "CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL", "version": 1, "scope": "row", "severity": "HIGH",
+    "message_template": "current_balance {current_balance} exceeds original_principal {original_principal}.",
+    "explanation": "An amortizing loan's balance should never exceed what was originally lent.",
+    "condition": {"type": "comparison", "operator": "<=", "left": {"type": "field", "name": "current_balance"}, "right": {"type": "field", "name": "original_principal"}}
+  },
+  {
+    "rule_code": "INTEREST_RATE_IN_RANGE", "version": 1, "scope": "row", "severity": "MEDIUM",
+    "message_template": "interest_rate {interest_rate} is outside the plausible 0–36% range.",
+    "explanation": "Rates at or below 0 or above 36% are almost always a data-entry or unit error.",
+    "condition": {"type": "and", "operands": [
+      {"type": "comparison", "operator": ">", "left": {"type": "field", "name": "interest_rate"}, "right": {"type": "literal", "value": 0}},
+      {"type": "comparison", "operator": "<=", "left": {"type": "field", "name": "interest_rate"}, "right": {"type": "literal", "value": 36}}
+    ]}
+  },
+  {
+    "rule_code": "PAYMENT_STATUS_DPD_CONSISTENT", "version": 1, "scope": "row", "severity": "HIGH",
+    "message_template": "payment_status is current but days_past_due is {days_past_due}.",
+    "explanation": "A current loan must have zero days past due.",
+    "condition": {"type": "or", "operands": [
+      {"type": "not", "operand": {"type": "comparison", "operator": "==", "left": {"type": "field", "name": "payment_status"}, "right": {"type": "literal", "value": "current"}}},
+      {"type": "comparison", "operator": "==", "left": {"type": "field", "name": "days_past_due"}, "right": {"type": "literal", "value": 0}}
+    ]}
+  },
+  {
+    "rule_code": "DELINQUENT_STATUS_DPD_CONSISTENT", "version": 1, "scope": "row", "severity": "HIGH",
+    "message_template": "payment_status is delinquent/default but days_past_due is {days_past_due}.",
+    "explanation": "A delinquent or defaulted loan must have days_past_due greater than zero.",
+    "condition": {"type": "or", "operands": [
+      {"type": "not", "operand": {"type": "func", "name": "in_set", "args": [{"type": "field", "name": "payment_status"}, {"type": "literal", "value": ["dpd_30_59", "dpd_60_89", "dpd_90_plus", "default"]}]}},
+      {"type": "comparison", "operator": ">", "left": {"type": "field", "name": "days_past_due"}, "right": {"type": "literal", "value": 0}}
+    ]}
+  },
+  {
+    "rule_code": "REQUIRED_DOCUMENT_STATUS", "version": 1, "scope": "row", "severity": "MEDIUM",
+    "message_template": "document_status is missing on the reconciled record.",
+    "explanation": "Evaluated on the canonical record after manifest reconciliation; a verified loan needs a document status.",
+    "condition": {"type": "func", "name": "not_null", "args": [{"type": "field", "name": "document_status"}]}
+  },
+  {
+    "rule_code": "VALID_PAYMENT_STATUS", "version": 1, "scope": "row", "severity": "LOW",
+    "message_template": "payment_status {payment_status} is not a recognized value.",
+    "explanation": "After normalization the value must be one of the canonical PAYMENT_STATUS_CANON tokens; unmappable raw values fail here.",
+    "condition": {"type": "func", "name": "in_set", "args": [{"type": "field", "name": "payment_status"}, {"type": "literal", "value": ["current", "dpd_30_59", "dpd_60_89", "dpd_90_plus", "default", "paid_off", "closed"]}]}
+  },
+  {
+    "rule_code": "STALENESS_THRESHOLD", "version": 1, "scope": "row", "severity": "MEDIUM",
+    "message_template": "last_updated_at {last_updated_at} is more than 180 days old.",
+    "explanation": "Data older than the staleness window (180 days) may no longer reflect the loan's true state.",
+    "condition": {
+      "type": "or",
+      "operands": [
+        {
+          "type": "not",
+          "operand": {
+            "type": "comparison",
+            "operator": "==",
+            "left": {"type": "context", "name": "source_system"},
+            "right": {"type": "literal", "value": "OriginationCore"}
+          }
+        },
+        {
+          "type": "comparison",
+          "operator": "<=",
+          "left": {
+            "type": "func",
+            "name": "days_between",
+            "args": [
+              {"type": "context", "name": "now"},
+              {"type": "field", "name": "last_updated_at"}
+            ]
+          },
+          "right": {"type": "literal", "value": 180}
+        }
+      ]
+    }
+  },
+  {
+    "rule_code": "VALID_BORROWER_STATE", "version": 1, "scope": "row", "severity": "LOW",
+    "message_template": "property_state {property_state} is not a valid US state code.",
+    "explanation": "property_state must be a 2-letter USPS code (50 states).",
+    "condition": {"type": "func", "name": "in_set", "args": [{"type": "func", "name": "upper", "args": [{"type": "field", "name": "property_state"}]}, {"type": "literal", "value": ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"]}]}
+  },
+  {
+    "rule_code": "REPEATED_BORROWER_PATTERN", "version": 1, "scope": "dataset", "severity": "MEDIUM",
+    "message_template": "borrower_id {borrower_id} originated more than 3 loans within 90 days.",
+    "explanation": "A burst of loans to one borrower in a short window is a fraud/round-tripping signal.",
+    "condition": {"check": "repeat_pattern", "key": "borrower_id", "count_gt": 3, "window_days": 90, "partition_by": "global"}
+  },
+  {
+    "rule_code": "CLOSED_LOAN_ZERO_BALANCE", "version": 1, "scope": "row", "severity": "HIGH",
+    "message_template": "payment_status is closed/paid_off but current_balance is {current_balance}.",
+    "explanation": "A closed or paid-off loan must carry a zero balance.",
+    "condition": {"type": "or", "operands": [
+      {"type": "not", "operand": {"type": "func", "name": "in_set", "args": [{"type": "field", "name": "payment_status"}, {"type": "literal", "value": ["closed", "paid_off"]}]}},
+      {"type": "comparison", "operator": "==", "left": {"type": "field", "name": "current_balance"}, "right": {"type": "literal", "value": 0}}
+    ]}
+  }
+]

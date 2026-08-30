@@ -1,0 +1,5 @@
+[
+  { "name": "Olivia Operator", "email": "operator@truetape.dev", "role": "operator", "password": "operator123" },
+  { "name": "Ravi Reviewer",   "email": "reviewer@truetape.dev", "role": "reviewer", "password": "reviewer123" },
+  { "name": "Cara Consumer",   "email": "consumer@truetape.dev", "role": "consumer", "password": "consumer123" }
+]

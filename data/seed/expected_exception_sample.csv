@@ -1,0 +1,216 @@
+file_name,row_ref,loan_id,defect_class,rule_code,field_name,injected_value,note
+loan_tape.csv,loan_tape#01049,LN-001049,MISSING_LOAN_ID,,loan_id,,"quarantined, never validated"
+loan_tape.csv,loan_tape#00228,LN-000228,MISSING_LOAN_ID,,loan_id,,"quarantined, never validated"
+loan_tape.csv,loan_tape#00963,LN-000963,MISSING_LOAN_ID,,loan_id,,"quarantined, never validated"
+loan_tape.csv,loan_tape#00317,LN-000317,MISSING_LOAN_ID,,loan_id,,"quarantined, never validated"
+loan_tape.csv,loan_tape#00266,LN-000266,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#00416,LN-000416,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#00787,LN-000787,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#00515,LN-000515,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#00986,LN-000986,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#01005,LN-001005,MISSING_REQUIRED_FIELD,REQUIRED_CORE_FIELDS,original_principal,,
+loan_tape.csv,loan_tape#00248,LN-000248,DUPLICATE_LOAN_ID,DUPLICATE_LOAN_ID,loan_id,LN-000483,clone of LN-000483
+loan_tape.csv,loan_tape#01097,LN-001097,DUPLICATE_LOAN_ID,DUPLICATE_LOAN_ID,loan_id,LN-000289,clone of LN-000289
+loan_tape.csv,loan_tape#00406,LN-000406,DUPLICATE_LOAN_ID,DUPLICATE_LOAN_ID,loan_id,LN-000185,clone of LN-000185
+loan_tape.csv,loan_tape#00994,LN-000994,DUPLICATE_LOAN_ID,DUPLICATE_LOAN_ID,loan_id,LN-000702,clone of LN-000702
+loan_tape.csv,loan_tape#00694,LN-000694,DUPLICATE_LOAN_ID,DUPLICATE_LOAN_ID,loan_id,LN-000279,clone of LN-000279
+loan_tape.csv,loan_tape#00465,LN-000465,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,31/07/2024,
+loan_tape.csv,loan_tape#00083,LN-000083,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,07-31-2024,
+loan_tape.csv,loan_tape#00917,LN-000917,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,Jul 31 2024,
+loan_tape.csv,loan_tape#00859,LN-000859,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,31/07/2024,
+loan_tape.csv,loan_tape#01147,LN-001147,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,07-31-2024,
+loan_tape.csv,loan_tape#00218,LN-000218,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,Jul 31 2024,
+loan_tape.csv,loan_tape#00015,LN-000015,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,31/07/2024,
+loan_tape.csv,loan_tape#00373,LN-000373,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,07-31-2024,
+loan_tape.csv,loan_tape#00588,LN-000588,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,Jul 31 2024,
+loan_tape.csv,loan_tape#01121,LN-001121,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,31/07/2024,
+loan_tape.csv,loan_tape#00031,LN-000031,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,07-31-2024,
+loan_tape.csv,loan_tape#01125,LN-001125,INVALID_DATE_FORMAT,INVALID_DATE_FORMAT,origination_date,Jul 31 2024,
+loan_tape.csv,loan_tape#00751,LN-000751,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,"1,25,000",
+loan_tape.csv,loan_tape#00721,LN-000721,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,$118500,
+loan_tape.csv,loan_tape#00954,LN-000954,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,N/A,
+loan_tape.csv,loan_tape#01026,LN-001026,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,"1,25,000",
+loan_tape.csv,loan_tape#00065,LN-000065,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,$118500,
+loan_tape.csv,loan_tape#01175,LN-001175,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,N/A,
+loan_tape.csv,loan_tape#00348,LN-000348,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,"1,25,000",
+loan_tape.csv,loan_tape#00527,LN-000527,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,$118500,
+loan_tape.csv,loan_tape#00601,LN-000601,INVALID_NUMERIC_FORMAT,INVALID_NUMERIC_FORMAT,current_balance,N/A,
+loan_tape.csv,loan_tape#00398,LN-000398,MATURITY_BEFORE_ORIGINATION,MATURITY_AFTER_ORIGINATION,maturity_date,2023-04-22,
+loan_tape.csv,loan_tape#00277,LN-000277,MATURITY_BEFORE_ORIGINATION,MATURITY_AFTER_ORIGINATION,maturity_date,2021-06-11,
+loan_tape.csv,loan_tape#00437,LN-000437,MATURITY_BEFORE_ORIGINATION,MATURITY_AFTER_ORIGINATION,maturity_date,2020-02-25,
+loan_tape.csv,loan_tape#00810,LN-000810,MATURITY_BEFORE_ORIGINATION,MATURITY_AFTER_ORIGINATION,maturity_date,2019-06-25,
+loan_tape.csv,loan_tape#00382,LN-000382,MATURITY_BEFORE_ORIGINATION,MATURITY_AFTER_ORIGINATION,maturity_date,2023-05-31,
+loan_tape.csv,loan_tape#00333,LN-000333,NEGATIVE_PRINCIPAL,NON_NEGATIVE_PRINCIPAL,original_principal,-52811.26,
+loan_tape.csv,loan_tape#00249,LN-000249,NEGATIVE_PRINCIPAL,NON_NEGATIVE_PRINCIPAL,original_principal,-676386.71,
+loan_tape.csv,loan_tape#00801,LN-000801,NEGATIVE_PRINCIPAL,NON_NEGATIVE_PRINCIPAL,original_principal,-609811.14,
+loan_tape.csv,loan_tape#00078,LN-000078,NEGATIVE_BALANCE,NON_NEGATIVE_BALANCE,current_balance,-17114.87,
+loan_tape.csv,loan_tape#00788,LN-000788,NEGATIVE_BALANCE,NON_NEGATIVE_BALANCE,current_balance,-35570.18,
+loan_tape.csv,loan_tape#00784,LN-000784,NEGATIVE_BALANCE,NON_NEGATIVE_BALANCE,current_balance,-19277.31,
+loan_tape.csv,loan_tape#01130,LN-001130,NEGATIVE_BALANCE,NON_NEGATIVE_BALANCE,current_balance,-23198.12,
+loan_tape.csv,loan_tape#00722,LN-000722,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,594762.72,
+loan_tape.csv,loan_tape#00934,LN-000934,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,182582.5,
+loan_tape.csv,loan_tape#00532,LN-000532,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,704910.64,
+loan_tape.csv,loan_tape#00816,LN-000816,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,1041062.74,
+loan_tape.csv,loan_tape#00967,LN-000967,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,639413.08,
+loan_tape.csv,loan_tape#00041,LN-000041,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,574438.6,
+loan_tape.csv,loan_tape#00797,LN-000797,BALANCE_EXCEEDS_PRINCIPAL,CURRENT_BALANCE_LE_ORIGINAL_PRINCIPAL,current_balance,697835.97,
+loan_tape.csv,loan_tape#00907,LN-000907,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,-2.041,
+loan_tape.csv,loan_tape#00731,LN-000731,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,51.417,
+loan_tape.csv,loan_tape#00136,LN-000136,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,-1.669,
+loan_tape.csv,loan_tape#00895,LN-000895,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,83.719,
+loan_tape.csv,loan_tape#00243,LN-000243,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,-2.49,
+loan_tape.csv,loan_tape#00504,LN-000504,RATE_OUT_OF_RANGE,INTEREST_RATE_IN_RANGE,interest_rate,78.843,
+loan_tape.csv,loan_tape#00747,LN-000747,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,191,status Current but dpd > 0
+loan_tape.csv,loan_tape#00291,LN-000291,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,151,status Current but dpd > 0
+loan_tape.csv,loan_tape#00184,LN-000184,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,97,status Current but dpd > 0
+loan_tape.csv,loan_tape#00660,LN-000660,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,122,status Current but dpd > 0
+loan_tape.csv,loan_tape#00113,LN-000113,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,219,status Current but dpd > 0
+loan_tape.csv,loan_tape#00237,LN-000237,STATUS_CURRENT_WITH_DPD,PAYMENT_STATUS_DPD_CONSISTENT,days_past_due,88,status Current but dpd > 0
+loan_tape.csv,loan_tape#00833,LN-000833,STATUS_DELINQUENT_WITHOUT_DPD,DELINQUENT_STATUS_DPD_CONSISTENT,days_past_due,0,status delinquent but dpd = 0
+loan_tape.csv,loan_tape#00611,LN-000611,STATUS_DELINQUENT_WITHOUT_DPD,DELINQUENT_STATUS_DPD_CONSISTENT,days_past_due,0,status delinquent but dpd = 0
+loan_tape.csv,loan_tape#00298,LN-000298,STATUS_DELINQUENT_WITHOUT_DPD,DELINQUENT_STATUS_DPD_CONSISTENT,days_past_due,0,status delinquent but dpd = 0
+loan_tape.csv,loan_tape#00796,LN-000796,STATUS_DELINQUENT_WITHOUT_DPD,DELINQUENT_STATUS_DPD_CONSISTENT,days_past_due,0,status delinquent but dpd = 0
+loan_tape.csv,loan_tape#00149,LN-000149,STATUS_DELINQUENT_WITHOUT_DPD,DELINQUENT_STATUS_DPD_CONSISTENT,days_past_due,0,status delinquent but dpd = 0
+loan_tape.csv,loan_tape#00010,LN-000010,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00984,LN-000984,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00020,LN-000020,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00446,LN-000446,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00405,LN-000405,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00746,LN-000746,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00096,LN-000096,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#01071,LN-001071,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+loan_tape.csv,loan_tape#00529,LN-000529,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2026-01-16T09:00:00Z,
+loan_tape.csv,loan_tape#00321,LN-000321,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2024-03-23T09:00:00Z,
+loan_tape.csv,loan_tape#00578,LN-000578,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2024-04-26T09:00:00Z,
+loan_tape.csv,loan_tape#00434,LN-000434,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2025-04-04T09:00:00Z,
+loan_tape.csv,loan_tape#00231,LN-000231,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2024-07-03T09:00:00Z,
+loan_tape.csv,loan_tape#01103,LN-001103,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2025-09-19T09:00:00Z,
+loan_tape.csv,loan_tape#00455,LN-000455,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2025-09-18T09:00:00Z,
+loan_tape.csv,loan_tape#00281,LN-000281,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2025-10-10T09:00:00Z,
+loan_tape.csv,loan_tape#00591,LN-000591,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2024-10-29T09:00:00Z,
+loan_tape.csv,loan_tape#01110,LN-001110,STALE_LAST_UPDATED,STALENESS_THRESHOLD,last_updated_at,2025-12-09T09:00:00Z,
+loan_tape.csv,loan_tape#00600,LN-000600,INVALID_STATE_CODE,VALID_BORROWER_STATE,property_state,XX,
+loan_tape.csv,loan_tape#01031,LN-001031,INVALID_STATE_CODE,VALID_BORROWER_STATE,property_state,ZZ,
+loan_tape.csv,loan_tape#01143,LN-001143,INVALID_STATE_CODE,VALID_BORROWER_STATE,property_state,California,
+loan_tape.csv,loan_tape#00452,LN-000452,INVALID_STATE_CODE,VALID_BORROWER_STATE,property_state,XX,
+loan_tape.csv,loan_tape#00049,LN-000049,INVALID_STATE_CODE,VALID_BORROWER_STATE,property_state,ZZ,
+loan_tape.csv,loan_tape#00021,LN-000021,INVALID_PAYMENT_STATUS,VALID_PAYMENT_STATUS,payment_status,activ,status outside the canonical vocabulary
+loan_tape.csv,loan_tape#00618,LN-000618,INVALID_PAYMENT_STATUS,VALID_PAYMENT_STATUS,payment_status,Unknown,status outside the canonical vocabulary
+loan_tape.csv,loan_tape#00220,LN-000220,INVALID_PAYMENT_STATUS,VALID_PAYMENT_STATUS,payment_status,PAIDOFF,status outside the canonical vocabulary
+loan_tape.csv,loan_tape#00871,LN-000871,INVALID_PAYMENT_STATUS,VALID_PAYMENT_STATUS,payment_status,N/A,status outside the canonical vocabulary
+loan_tape.csv,loan_tape#00153,LN-000153,INVALID_PAYMENT_STATUS,VALID_PAYMENT_STATUS,payment_status,PastDue,status outside the canonical vocabulary
+loan_tape.csv,loan_tape#00032,LN-000032,CLOSED_LOAN_POSITIVE_BALANCE,CLOSED_LOAN_ZERO_BALANCE,current_balance,24350.2,
+loan_tape.csv,loan_tape#00648,LN-000648,CLOSED_LOAN_POSITIVE_BALANCE,CLOSED_LOAN_ZERO_BALANCE,current_balance,69084.49,
+loan_tape.csv,loan_tape#00469,LN-000469,CLOSED_LOAN_POSITIVE_BALANCE,CLOSED_LOAN_ZERO_BALANCE,current_balance,49510.79,
+loan_tape.csv,loan_tape#01122,LN-001122,CLOSED_LOAN_POSITIVE_BALANCE,CLOSED_LOAN_ZERO_BALANCE,current_balance,61768.66,
+loan_tape.csv,loan_tape#00302,LN-000302,CLOSED_LOAN_POSITIVE_BALANCE,CLOSED_LOAN_ZERO_BALANCE,current_balance,3646.82,
+loan_tape.csv,loan_tape#01201,LN-901201,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Meera Banerjee,same fingerprint as LN-000391
+loan_tape.csv,loan_tape#01202,LN-901202,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Manav Sethi,same fingerprint as LN-000971
+loan_tape.csv,loan_tape#01203,LN-901203,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Rahul Gupta,same fingerprint as LN-000644
+loan_tape.csv,loan_tape#01204,LN-901204,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Rahul Rao,same fingerprint as LN-000637
+loan_tape.csv,loan_tape#01205,LN-901205,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Nisha Desai,same fingerprint as LN-000926
+loan_tape.csv,loan_tape#01206,LN-901206,DUPLICATE_BORROWER_FINGERPRINT,DUPLICATE_BORROWER_FINGERPRINT,borrower_name,Aman Reddy,same fingerprint as LN-000329
+loan_tape.csv,loan_tape#01207,LN-801207,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+loan_tape.csv,loan_tape#01208,LN-801208,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+loan_tape.csv,loan_tape#01209,LN-801209,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+loan_tape.csv,loan_tape#01210,LN-801210,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+loan_tape.csv,loan_tape#01211,LN-801211,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+loan_tape.csv,loan_tape#01212,LN-801212,REPEATED_BORROWER_PATTERN,REPEATED_BORROWER_PATTERN,borrower_id,BR-777777,6 originations in 60 days
+servicer_update.csv,servicer_update#00001,LN-001160,SOURCE_CONFLICT,,current_balance,194741.27,origination says 238693.88
+servicer_update.csv,servicer_update#00003,LN-000863,SOURCE_CONFLICT,,payment_status,90+ Days,origination says 60-89 Days
+servicer_update.csv,servicer_update#00007,LN-000955,SOURCE_CONFLICT,,current_balance,270030.71,origination says 337794.66
+servicer_update.csv,servicer_update#00014,LN-000542,SOURCE_CONFLICT,,current_balance,111041.58,origination says 120386.08
+servicer_update.csv,servicer_update#00021,LN-001106,SOURCE_CONFLICT,,current_balance,428683.0,origination says 447589.43
+servicer_update.csv,servicer_update#00024,LN-000491,SOURCE_CONFLICT,,current_balance,36131.76,origination says 45291.13
+servicer_update.csv,servicer_update#00027,LN-000040,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says Current
+servicer_update.csv,servicer_update#00032,LN-801210,SOURCE_CONFLICT,,current_balance,297348.9,origination says 342176.03
+servicer_update.csv,servicer_update#00034,LN-000055,SOURCE_CONFLICT,,current_balance,457789.32,origination says 550767.04
+servicer_update.csv,servicer_update#00034,LN-000055,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+servicer_update.csv,servicer_update#00037,LN-000131,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00038,LN-000702,SOURCE_CONFLICT,,current_balance,211471.11,origination says 224330.81
+servicer_update.csv,servicer_update#00045,LN-001095,SOURCE_CONFLICT,,current_balance,159129.7,origination says 181213.86
+servicer_update.csv,servicer_update#00050,LN-001058,SOURCE_CONFLICT,,current_balance,371474.9,origination says 415243.44
+servicer_update.csv,servicer_update#00050,LN-001058,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Current
+servicer_update.csv,servicer_update#00066,LN-000458,SOURCE_CONFLICT,,current_balance,381931.64,origination says 486983.87
+servicer_update.csv,servicer_update#00076,LN-000191,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00087,LN-000616,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says 60-89 Days
+servicer_update.csv,servicer_update#00092,LN-000064,SOURCE_CONFLICT,,current_balance,169109.87,origination says 202599.7
+servicer_update.csv,servicer_update#00095,LN-000065,SOURCE_CONFLICT,,current_balance,403722.29,origination says 485820.87
+servicer_update.csv,servicer_update#00098,LN-000936,SOURCE_CONFLICT,,current_balance,299879.23,origination says 356610.85
+servicer_update.csv,servicer_update#00098,LN-000936,SOURCE_CONFLICT,,payment_status,90+ Days,origination says 60-89 Days
+servicer_update.csv,servicer_update#00100,LN-000829,SOURCE_CONFLICT,,current_balance,366500.14,origination says 443968.13
+servicer_update.csv,servicer_update#00101,LN-000309,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Current
+servicer_update.csv,servicer_update#00102,LN-001091,SOURCE_CONFLICT,,current_balance,603732.15,origination says 702290.82
+servicer_update.csv,servicer_update#00108,LN-001087,SOURCE_CONFLICT,,current_balance,55266.46,origination says 59314.18
+servicer_update.csv,servicer_update#00108,LN-001087,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says 30-59 Days
+servicer_update.csv,servicer_update#00116,LN-000700,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Current
+servicer_update.csv,servicer_update#00139,LN-000940,SOURCE_CONFLICT,,current_balance,141621.33,origination says 157139.05
+servicer_update.csv,servicer_update#00141,LN-000361,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Closed
+servicer_update.csv,servicer_update#00147,LN-000451,SOURCE_CONFLICT,,payment_status,Default,origination says Current
+servicer_update.csv,servicer_update#00151,LN-000523,SOURCE_CONFLICT,,current_balance,202227.04,origination says 235057.86
+servicer_update.csv,servicer_update#00151,LN-000523,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says 30-59 Days
+servicer_update.csv,servicer_update#00153,LN-001000,SOURCE_CONFLICT,,payment_status,Default,origination says 30-59 Days
+servicer_update.csv,servicer_update#00159,LN-000294,SOURCE_CONFLICT,,current_balance,584249.95,origination says 637816.95
+servicer_update.csv,servicer_update#00162,LN-000771,SOURCE_CONFLICT,,current_balance,342156.96,origination says 382203.7
+servicer_update.csv,servicer_update#00171,LN-000514,SOURCE_CONFLICT,,current_balance,162596.54,origination says 197651.06
+servicer_update.csv,servicer_update#00180,LN-001133,SOURCE_CONFLICT,,current_balance,230381.11,origination says 275404.81
+servicer_update.csv,servicer_update#00208,LN-000840,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00213,LN-000971,SOURCE_CONFLICT,,current_balance,325400.58,origination says 363604.96
+servicer_update.csv,servicer_update#00215,LN-000701,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says 30-59 Days
+servicer_update.csv,servicer_update#00221,LN-000724,SOURCE_CONFLICT,,current_balance,411855.82,origination says 473011.81
+servicer_update.csv,servicer_update#00228,LN-000151,SOURCE_CONFLICT,,current_balance,609052.6,origination says 639225.16
+servicer_update.csv,servicer_update#00230,LN-001015,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Current
+servicer_update.csv,servicer_update#00236,LN-000256,SOURCE_CONFLICT,,current_balance,271703.65,origination says 288680.27
+servicer_update.csv,servicer_update#00247,LN-000238,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00248,LN-000442,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00251,LN-000416,SOURCE_CONFLICT,,current_balance,514360.31,origination says 559717.66
+servicer_update.csv,servicer_update#00251,LN-000416,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says 30-59 Days
+servicer_update.csv,servicer_update#00253,LN-000478,SOURCE_CONFLICT,,current_balance,66733.61,origination says 79999.26
+servicer_update.csv,servicer_update#00254,LN-000623,SOURCE_CONFLICT,,current_balance,288822.14,origination says 312159.0
+servicer_update.csv,servicer_update#00255,LN-000800,SOURCE_CONFLICT,,current_balance,111532.13,origination says 137491.65
+servicer_update.csv,servicer_update#00265,LN-000320,SOURCE_CONFLICT,,payment_status,Default,origination says 60-89 Days
+servicer_update.csv,servicer_update#00274,LN-001190,SOURCE_CONFLICT,,current_balance,382095.47,origination says 474331.28
+servicer_update.csv,servicer_update#00274,LN-001190,SOURCE_CONFLICT,,payment_status,Default,origination says Current
+servicer_update.csv,servicer_update#00282,LN-000399,SOURCE_CONFLICT,,current_balance,622855.16,origination says 695258.83
+servicer_update.csv,servicer_update#00295,LN-000587,SOURCE_CONFLICT,,current_balance,451471.57,origination says 497440.34
+servicer_update.csv,servicer_update#00295,LN-000587,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+servicer_update.csv,servicer_update#00299,LN-000194,SOURCE_CONFLICT,,current_balance,242677.29,origination says 303543.66
+servicer_update.csv,servicer_update#00303,LN-001054,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says Paid Off
+servicer_update.csv,servicer_update#00306,LN-000846,SOURCE_CONFLICT,,current_balance,525567.22,origination says 572518.69
+servicer_update.csv,servicer_update#00312,LN-000757,SOURCE_CONFLICT,,current_balance,148994.22,origination says 188264.2
+servicer_update.csv,servicer_update#00317,LN-000775,SOURCE_CONFLICT,,current_balance,308578.97,origination says 376239.94
+servicer_update.csv,servicer_update#00317,LN-000775,SOURCE_CONFLICT,,payment_status,90+ Days,origination says 30-59 Days
+servicer_update.csv,servicer_update#00319,LN-000758,SOURCE_CONFLICT,,current_balance,309870.33,origination says 377259.63
+servicer_update.csv,servicer_update#00329,LN-000192,SOURCE_CONFLICT,,current_balance,69470.33,origination says 76949.78
+servicer_update.csv,servicer_update#00337,LN-000262,SOURCE_CONFLICT,,current_balance,457566.93,origination says 535294.99
+servicer_update.csv,servicer_update#00337,LN-000262,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+servicer_update.csv,servicer_update#00339,LN-000177,SOURCE_CONFLICT,,payment_status,90+ Days,origination says Paid Off
+servicer_update.csv,servicer_update#00340,LN-000051,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+servicer_update.csv,servicer_update#00355,LN-000618,SOURCE_CONFLICT,,current_balance,85875.71,origination says 107598.0
+servicer_update.csv,servicer_update#00356,LN-000087,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says Current
+servicer_update.csv,servicer_update#00370,LN-801207,SOURCE_CONFLICT,,current_balance,298154.77,origination says 341334.15
+servicer_update.csv,servicer_update#00375,LN-000770,SOURCE_CONFLICT,,current_balance,293629.38,origination says 310903.59
+servicer_update.csv,servicer_update#00375,LN-000770,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+servicer_update.csv,servicer_update#00382,LN-000234,SOURCE_CONFLICT,,current_balance,129339.39,origination says 159772.07
+servicer_update.csv,servicer_update#00384,LN-000293,SOURCE_CONFLICT,,current_balance,0.0,origination says 0.0
+servicer_update.csv,servicer_update#00388,LN-000223,SOURCE_CONFLICT,,current_balance,171383.75,origination says 204582.53
+servicer_update.csv,servicer_update#00391,LN-000018,SOURCE_CONFLICT,,current_balance,123537.57,origination says 148590.55
+servicer_update.csv,servicer_update#00391,LN-000018,SOURCE_CONFLICT,,payment_status,Default,origination says Current
+servicer_update.csv,servicer_update#00397,LN-000966,SOURCE_CONFLICT,,current_balance,244681.18,origination says 270814.03
+servicer_update.csv,servicer_update#00400,LN-000486,SOURCE_CONFLICT,,current_balance,79360.88,origination says 88522.38
+servicer_update.csv,servicer_update#00415,LN-000720,SOURCE_CONFLICT,,current_balance,195752.97,origination says 247293.28
+servicer_update.csv,servicer_update#00427,LN-000241,SOURCE_CONFLICT,,current_balance,404487.94,origination says 430909.55
+servicer_update.csv,servicer_update#00428,LN-000347,SOURCE_CONFLICT,,current_balance,394671.58,origination says 451873.62
+servicer_update.csv,servicer_update#00429,LN-000239,SOURCE_CONFLICT,,current_balance,148771.99,origination says 167116.73
+servicer_update.csv,servicer_update#00434,LN-000961,SOURCE_CONFLICT,,current_balance,293598.3,origination says 336830.25
+servicer_update.csv,servicer_update#00436,LN-000105,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says Current
+servicer_update.csv,servicer_update#00437,LN-000642,SOURCE_CONFLICT,,current_balance,86991.98,origination says 98887.83
+servicer_update.csv,servicer_update#00444,LN-000563,SOURCE_CONFLICT,,current_balance,427267.11,origination says 506161.1
+servicer_update.csv,servicer_update#00454,LN-001098,SOURCE_CONFLICT,,payment_status,60-89 Days,origination says Current
+servicer_update.csv,servicer_update#00473,LN-000007,SOURCE_CONFLICT,,payment_status,30-59 Days,origination says Current
+document_manifest.csv,document_manifest#00302,LN-000107,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+document_manifest.csv,document_manifest#00378,LN-000423,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+document_manifest.csv,document_manifest#00390,LN-000845,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+document_manifest.csv,document_manifest#00439,LN-000376,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+document_manifest.csv,document_manifest#00503,LN-000396,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,
+document_manifest.csv,document_manifest#00523,LN-000275,MISSING_DOCUMENT_STATUS,REQUIRED_DOCUMENT_STATUS,document_status,,

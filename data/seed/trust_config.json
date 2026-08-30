@@ -1,0 +1,20 @@
+[
+  {"source_system": "OriginationCore", "field_name": null,              "trust_score": 62, "rationale": "Origination export: authoritative at closing, not refreshed after boarding."},
+  {"source_system": "OriginationCore", "field_name": "original_principal", "trust_score": 90, "rationale": "Original principal is fixed at closing by the origination system; most authoritative here."},
+  {"source_system": "OriginationCore", "field_name": "current_balance",   "trust_score": 55, "rationale": "Balances drift after boarding; origination is stale on anything that changes."},
+  {"source_system": "OriginationCore", "field_name": "payment_status",    "trust_score": 55, "rationale": "Payment status changes post-closing; origination does not track it."},
+  {"source_system": "OriginationCore", "field_name": "days_past_due",     "trust_score": 55, "rationale": "Delinquency is a servicing fact; origination cannot know it."},
+  {"source_system": "OriginationCore", "field_name": "document_status",   "trust_score": 40, "rationale": "Origination does not own the document record; the manifest does."},
+
+  {"source_system": "ServicerFeed", "field_name": null,               "trust_score": 88, "rationale": "Servicer feed: system of record for anything that changes after boarding."},
+  {"source_system": "ServicerFeed", "field_name": "original_principal", "trust_score": 60, "rationale": "Servicers sometimes re-key original terms; origination is more authoritative there."},
+  {"source_system": "ServicerFeed", "field_name": "current_balance",   "trust_score": 92, "rationale": "Current balance is the servicer's core responsibility; most authoritative."},
+  {"source_system": "ServicerFeed", "field_name": "payment_status",    "trust_score": 92, "rationale": "Payment status is maintained by the servicer; most authoritative."},
+  {"source_system": "ServicerFeed", "field_name": "days_past_due",     "trust_score": 92, "rationale": "Delinquency is computed by the servicer; most authoritative."},
+  {"source_system": "ServicerFeed", "field_name": "document_status",   "trust_score": 50, "rationale": "Servicer sees documents indirectly; the manifest is authoritative."},
+
+  {"source_system": "DocumentManifest", "field_name": null,             "trust_score": 70, "rationale": "Document manifest asserts only document facts; trusted within that scope."},
+  {"source_system": "DocumentManifest", "field_name": "document_status", "trust_score": 95, "rationale": "The manifest is the system of record for document completeness."},
+
+  {"source_system": "human_override", "field_name": null, "trust_score": 100, "rationale": "A reviewer's decision outranks every machine source and is pinned in loan_canonical."}
+]
