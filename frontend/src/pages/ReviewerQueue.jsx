@@ -119,9 +119,14 @@ function AiRecommendationCard({ rec }) {
         <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${meta.pill}`}>
           {meta.title}
         </span>
-        <span className="text-xs text-slate-500">
-          {rec.model_name} · confidence{' '}
-          <span className="font-semibold text-slate-800">{Number(rec.confidence).toFixed(2)}</span>
+        <span className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+          <span className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-[10px] text-slate-500" title="Prompt version used to produce this recommendation">
+            prompt: {rec.prompt_version ?? 'n/a'}
+          </span>
+          <span>{rec.model_name}</span>
+          <span>· confidence{' '}
+            <span className="font-semibold text-slate-800">{Number(rec.confidence).toFixed(2)}</span>
+          </span>
         </span>
       </div>
 
@@ -204,6 +209,10 @@ function AiRecommendations({ recs }) {
 }
 
 // ---------------- resolve form ----------------
+// The form is EXPLICITLY coupled to the AI suggestion: the reviewer can
+// accept it in one click (pre-filling the correction), dismiss it (recorded
+// as disagreeing), or ignore it and decide freely. Nothing is written until
+// "Record decision" — the AI never mutates data on its own.
 function ResolveForm({ exc, onDone }) {
   const queryClient = useQueryClient()
   const [action, setAction] = useState('accept')
@@ -211,6 +220,25 @@ function ResolveForm({ exc, onDone }) {
   const [requestCorrection, setRequestCorrection] = useState(false)
   const [fieldName, setFieldName] = useState(exc.field_name ?? '')
   const [afterValue, setAfterValue] = useState('')
+  const [aiRef, setAiRef] = useState(null)          // rec id the decision responds to
+  const [aiVerdict, setAiVerdict] = useState(null)  // 'accepted' | 'dismissed'
+
+  // Latest AI recommendation that actually proposes a correction.
+  const aiSuggestion = [...(exc.ai_recommendations ?? [])]
+    .filter((r) => r.suggested_field && r.suggested_value != null && r.suggested_value !== '')
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+
+  function useAiFix() {
+    setAction('edit')
+    setFieldName(aiSuggestion.suggested_field)
+    setAfterValue(String(aiSuggestion.suggested_value))
+    setAiRef(aiSuggestion.id)
+    setAiVerdict('accepted')
+  }
+  function dismissAiFix() {
+    setAiRef(aiSuggestion?.id ?? null)
+    setAiVerdict('dismissed')
+  }
 
   const resolve = useMutation({
     mutationFn: async () => {
@@ -219,8 +247,11 @@ function ResolveForm({ exc, onDone }) {
       if (action === 'edit' || action === 'manual_resolution') {
         body.changes = [{ field: fieldName, after: afterValue }]
       }
-      if (exc.ai_recommendations?.[0]?.id) {
-        body.ai_recommendation_id = exc.ai_recommendations[0].id
+      const recId = aiRef ?? exc.ai_recommendations?.[0]?.id
+      if (recId) {
+        body.ai_recommendation_id = recId
+        if (aiVerdict === 'accepted') body.agreed_with_ai = true
+        if (aiVerdict === 'dismissed') body.agreed_with_ai = false
       }
       return api.post(`/exceptions/${exc.id}/resolve`, body)
     },
@@ -240,6 +271,66 @@ function ResolveForm({ exc, onDone }) {
       <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
         Resolve this exception
       </div>
+
+      {!aiSuggestion && (
+        <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+          {exc.rule_code?.startsWith('DUPLICATE_') || exc.rule_code?.startsWith('REPEATED_')
+            ? 'No AI correction is suggested here — this is a dataset-level check (rows compared against other rows), so the decision is about the records, not a field value.'
+            : exc.exception_type === 'source_conflict'
+              ? 'Run “Analyze failure” above and the AI will recommend the most-trusted source value for the conflicting field.'
+              : 'No AI correction suggested yet. Run “Analyze failure” above — if any source holds a valid alternative, the AI will propose it here for one-click acceptance.'}
+        </div>
+      )}
+
+      {aiSuggestion && (
+        <div className={`mb-3 rounded-lg border p-3 text-sm transition ${
+          aiVerdict === 'accepted' ? 'border-emerald-300 bg-emerald-50'
+          : aiVerdict === 'dismissed' ? 'border-slate-200 bg-slate-50'
+          : 'border-violet-300 bg-violet-50'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-slate-700">
+              AI suggests{' '}
+              <span className="font-medium">{fieldLabel(aiSuggestion.suggested_field)}</span>{' '}
+              <span className="font-mono">→ {fmtSuggested(aiSuggestion.suggested_field, aiSuggestion.suggested_value)}</span>
+              {aiSuggestion.suggested_source && (
+                <span className="ml-1.5 text-xs text-slate-400">from {aiSuggestion.suggested_source}</span>
+              )}
+            </span>
+            <span className="flex gap-2">
+              <button
+                type="button"
+                onClick={useAiFix}
+                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                  aiVerdict === 'accepted'
+                    ? 'bg-emerald-600 text-white'
+                    : 'border border-emerald-400 bg-white text-emerald-700 hover:bg-emerald-50'}`}
+              >
+                {aiVerdict === 'accepted' ? '✓ fix pre-filled below' : 'Accept AI fix'}
+              </button>
+              <button
+                type="button"
+                onClick={dismissAiFix}
+                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                  aiVerdict === 'dismissed'
+                    ? 'bg-slate-600 text-white'
+                    : 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}`}
+              >
+                {aiVerdict === 'dismissed' ? 'dismissed' : 'Dismiss'}
+              </button>
+            </span>
+          </div>
+          {aiVerdict === 'accepted' && (
+            <div className="mt-1.5 text-xs text-emerald-700">
+              Decision will be recorded as agreeing with the AI recommendation.
+            </div>
+          )}
+          {aiVerdict === 'dismissed' && (
+            <div className="mt-1.5 text-xs text-slate-500">
+              Decision will be recorded as disagreeing with the AI recommendation.
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {[
@@ -462,6 +553,17 @@ function ExceptionDetailPage({ excId, onBack }) {
         </div>
       )}
 
+      {/* resolve */}
+      {!decided ? (
+        <ResolveForm exc={d} />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+          This exception was <span className="font-medium">{d.status}</span> — the decision
+          above is final and hash-chained. Related defects on newer record versions
+          appear as their own open exceptions.
+        </div>
+      )}
+
       {/* what each source said + canonical value */}
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -550,16 +652,6 @@ function ExceptionDetailPage({ excId, onBack }) {
         </div>
       </div>
 
-      {/* resolve */}
-      {!decided ? (
-        <ResolveForm exc={d} />
-      ) : (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-          This exception was <span className="font-medium">{d.status}</span> — the decision
-          above is final and hash-chained. Related defects on newer record versions
-          appear as their own open exceptions.
-        </div>
-      )}
     </div>
   )
 }
@@ -604,6 +696,13 @@ export default function ReviewerQueue() {
       queryClient.invalidateQueries({ queryKey: ['clusters'] })
       queryClient.invalidateQueries({ queryKey: ['summary'] })
     },
+  })
+
+  // AI cluster summary (Required AI bullet: summarise a batch of exceptions)
+  const [clusterSummary, setClusterSummary] = useState(null)
+  const summarize = useMutation({
+    mutationFn: async (cid) => (await api.post('/ai/batch-summary', { cluster_id: cid })).data,
+    onSuccess: (rec) => setClusterSummary(rec),
   })
 
   if (selected) {
@@ -656,28 +755,62 @@ export default function ReviewerQueue() {
             <div className={`text-xs ${clusterFilter === null ? 'text-slate-300' : 'text-slate-500'}`}>all open</div>
           </button>
           {clusterRows.map((c) => (
-            <button
+            <div
               key={c.id}
               onClick={() => { setClusterFilter(clusterFilter === c.id ? null : c.id); setPage(1) }}
-              className={`rounded-xl border p-3 text-left shadow-sm transition ${
+              className={`group cursor-pointer rounded-xl border p-3 text-left shadow-sm transition ${
                 clusterFilter === c.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white hover:border-slate-400'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-semibold">{c.open_count}</span>
-                {c.highest_severity && (
-                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${clusterFilter === c.id ? 'bg-white/20' : SEV_STYLES[c.highest_severity]}`}>
-                    {c.highest_severity}
-                  </span>
-                )}
+                <span className="flex items-center gap-1">
+                  <button
+                    onClick={(ev) => { ev.stopPropagation(); summarize.mutate(c.id) }}
+                    disabled={summarize.isPending}
+                    title="AI summary of this whole cluster"
+                    className={`rounded px-1.5 py-0.5 text-[10px] font-medium opacity-0 transition group-hover:opacity-100 ${
+                      clusterFilter === c.id ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-violet-50 text-violet-700 hover:bg-violet-100'
+                    } disabled:opacity-30`}
+                  >
+                    ✦ summarize
+                  </button>
+                  {c.highest_severity && (
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${clusterFilter === c.id ? 'bg-white/20' : SEV_STYLES[c.highest_severity]}`}>
+                      {c.highest_severity}
+                    </span>
+                  )}
+                </span>
               </div>
               <div className={`truncate text-xs ${clusterFilter === c.id ? 'text-slate-300' : 'text-slate-500'}`} title={c.cluster_label}>
                 {c.cluster_label}
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>
+
+      {summarize.isPending && (
+        <div className="animate-pulse rounded-xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-700">
+          Summarizing the cluster…
+        </div>
+      )}
+      {clusterSummary && (
+        <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+              AI cluster summary
+            </span>
+            <button
+              onClick={() => setClusterSummary(null)}
+              className="text-xs text-slate-400 hover:text-slate-600"
+            >
+              close
+            </button>
+          </div>
+          <AiRecommendationCard rec={clusterSummary} />
+        </div>
+      )}
 
       {/* filters */}
       <div className="flex flex-wrap gap-3">

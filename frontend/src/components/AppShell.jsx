@@ -9,6 +9,7 @@ const NAV_BY_ROLE = {
   ],
   reviewer: [
     { to: '/reviewer', label: 'Exception queue' },
+    { to: '/rules', label: 'Rule studio' },
     { to: '/consumer', label: 'Verified records' },
   ],
   consumer: [

@@ -31,6 +31,7 @@ def _rec_summary(r: AiRecommendation) -> dict:
         "action_type": r.action_type,
         "provider": r.provider,
         "model_name": r.model_name,
+        "prompt_version": r.prompt_version,
         "problem": r.problem,
         "evidence": r.evidence,
         "reasoning": r.reasoning,

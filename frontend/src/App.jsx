@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import OperatorDashboard from './pages/OperatorDashboard'
 import ReviewerQueue from './pages/ReviewerQueue'
+import RulesPage from './pages/RulesPage'
 import ConsumerDashboard from './pages/ConsumerDashboard'
 
 function Protected({ roles, children }) {
@@ -33,6 +34,7 @@ export default function App() {
         <Route element={<Protected><AppShell /></Protected>}>
           <Route path="/operator" element={<Protected roles={['operator', 'reviewer']}><OperatorDashboard /></Protected>} />
           <Route path="/reviewer" element={<Protected roles={['reviewer']}><ReviewerQueue /></Protected>} />
+          <Route path="/rules" element={<Protected roles={['reviewer']}><RulesPage /></Protected>} />
           <Route path="/consumer" element={<Protected roles={['operator', 'reviewer', 'consumer']}><ConsumerDashboard /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
