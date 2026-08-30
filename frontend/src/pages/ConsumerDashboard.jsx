@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '../lib/api'
+import { fieldLabel, formatValue, humanize } from '../lib/format'
 
 const SEV_STYLES = {
   CRITICAL: 'bg-red-100 text-red-800',
@@ -17,93 +18,6 @@ const SOURCE_STYLES = {
 }
 
 // ---- human-readable field presentation -------------------------------------
-const FIELD_LABELS = {
-  loan_id: 'Loan ID',
-  borrower_id: 'Borrower ID',
-  borrower_name: 'Borrower',
-  credit_score: 'Credit score',
-  current_balance: 'Current balance',
-  days_past_due: 'Days past due',
-  document_status: 'Document status',
-  dti_ratio: 'DTI ratio',
-  interest_rate: 'Interest rate',
-  last_updated_at: 'Last updated',
-  loan_purpose: 'Purpose',
-  loan_term_months: 'Term (months)',
-  ltv_ratio: 'LTV ratio',
-  maturity_date: 'Maturity date',
-  original_principal: 'Original principal',
-  origination_date: 'Origination date',
-  payment_status: 'Payment status',
-  property_state: 'State',
-  property_type: 'Property type',
-  servicer_name: 'Servicer',
-  source_system: 'Primary source',
-}
-
-const MONEY = new Set(['current_balance', 'original_principal'])
-const PERCENT_OF_ONE = new Set(['dti_ratio', 'ltv_ratio']) // stored as 0.31 -> 31%
-const PERCENT = new Set(['interest_rate'])                  // stored as 7.85 -> 7.85%
-const DATE_ONLY = new Set(['origination_date', 'maturity_date'])
-const DATETIME = new Set(['last_updated_at'])
-
-const PAYMENT_STATUS_LABELS = {
-  current: 'Current',
-  dpd_30_59: 'DPD 30–59 days',
-  dpd_60_89: 'DPD 60–89 days',
-  dpd_90_plus: 'DPD 90+ days',
-  default: 'In default',
-  paid_off: 'Paid off',
-  closed: 'Closed',
-}
-
-function fmtMoney(v) {
-  return Number(v).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-}
-function humanize(key) {
-  return String(key)
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
-function formatValue(field, value) {
-  if (value == null || value === '') return '—'
-  if (field === 'payment_status' && PAYMENT_STATUS_LABELS[value]) return PAYMENT_STATUS_LABELS[value]
-  if (MONEY.has(field)) return fmtMoney(value)
-  if (PERCENT_OF_ONE.has(field)) return `${(Number(value) * 100).toFixed(1)}%`
-  if (PERCENT.has(field)) return `${Number(value).toFixed(2)}%`
-  if (DATE_ONLY.has(field)) return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-  if (DATETIME.has(field)) return new Date(value).toLocaleString()
-  if (field === 'credit_score' || field === 'days_past_due' || field === 'loan_term_months') return String(value)
-  // generic: humanize enum-ish strings, keep numbers tidy
-  if (typeof value === 'number') return Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })
-  if (typeof value === 'string' && value.includes('_')) return humanize(value)
-  return String(value)
-}
-function fieldLabel(field) {
-  return FIELD_LABELS[field] ?? humanize(field)
-}
-
-// Renders any breakdown value: number, string, array, or nested object.
-function SmartValue({ value }) {
-  if (value == null) return <span className="text-slate-400">—</span>
-  if (typeof value === 'number') return <span>{Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
-  if (typeof value === 'boolean') return <span>{value ? 'yes' : 'no'}</span>
-  if (Array.isArray(value)) return <span>{value.join(', ')}</span>
-  if (typeof value === 'object') {
-    return (
-      <span className="inline-flex flex-wrap gap-x-3 gap-y-0.5">
-        {Object.entries(value).map(([k, v]) => (
-          <span key={k}>
-            <span className="text-slate-400">{humanize(k)}: </span>
-            <span>{typeof v === 'number' ? Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }) : String(v)}</span>
-          </span>
-        ))}
-      </span>
-    )
-  }
-  return <span>{String(value)}</span>
-}
-
 function TrustBar({ score }) {
   const pct = Math.max(0, Math.min(100, score))
   const color = pct >= 90 ? 'bg-emerald-500' : pct >= 75 ? 'bg-lime-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'
@@ -114,6 +28,25 @@ function TrustBar({ score }) {
       </div>
       <span className="text-sm font-medium text-slate-700">{Number(score).toFixed(1)}</span>
     </div>
+  )
+}
+
+function CopyChip({ value, label }) {
+  const [copied, setCopied] = useState(false)
+  const short = String(value ?? '').slice(0, 10)
+  return (
+    <button
+      type="button"
+      title={`${label ?? 'hash'}: ${value} — click to copy`}
+      onClick={() => {
+        navigator.clipboard?.writeText(String(value ?? ''))
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1200)
+      }}
+      className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-600 transition hover:bg-slate-200"
+    >
+      {short}…{copied && <span className="font-sans text-emerald-600">copied</span>}
+    </button>
   )
 }
 
@@ -342,9 +275,9 @@ function LoanDetailPage({ loan, onBack }) {
               {Array.isArray(b.sources) && (
                 <div className="mt-0.5">Sources: {b.sources.join(', ')}</div>
               )}
-              <div className="mt-2 font-mono text-[11px] text-slate-400">
-                record_hash {v.record_hash?.slice(0, 20)}…
-                {v.prev_record_hash && <> · prev {v.prev_record_hash.slice(0, 12)}…</>}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+                record hash <CopyChip value={v.record_hash} label="record_hash" />
+                {v.prev_record_hash && <>· prev <CopyChip value={v.prev_record_hash} label="prev_record_hash" /></>}
               </div>
             </div>
           </div>
@@ -365,12 +298,18 @@ function LoanDetailPage({ loan, onBack }) {
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Source files (lineage)
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="divide-y divide-slate-100">
             {v.source_files.map((sf, i) => (
-              <span key={i} className="rounded bg-slate-100 px-2 py-1 font-mono text-xs text-slate-600">
-                {sf.filename ?? sf.file_name ?? 'source'}
-                {(sf.sha256 ?? sf.file_hash) ? ` · ${String(sf.sha256 ?? sf.file_hash).slice(0, 10)}…` : ''}
-              </span>
+              <div key={i} className="flex items-center justify-between gap-3 py-1.5">
+                <span className="text-sm text-slate-700">
+                  {sf.filename ?? sf.file_name ?? 'source'}
+                </span>
+                {(sf.sha256 ?? sf.file_hash) ? (
+                  <CopyChip value={sf.sha256 ?? sf.file_hash} label={`${sf.filename ?? 'file'} sha256`} />
+                ) : (
+                  <span className="text-xs text-slate-400">no hash</span>
+                )}
+              </div>
             ))}
           </div>
         </div>

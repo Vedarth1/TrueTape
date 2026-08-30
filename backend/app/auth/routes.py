@@ -41,6 +41,53 @@ def login():
                              "email": user.email, "role": user.role}}), 200
 
 
+@bp.post("/signup")
+def signup():
+    """Self-service registration. Creates a CONSUMER account (read-only).
+
+    Operator and reviewer are privileged roles: they are provisioned by the
+    seed/admin flow, never by open signup -- otherwise anyone could grant
+    themselves write access to the verification pipeline.
+    """
+    import re
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not name or not email or not password:
+        return jsonify({"error": {"code": "BAD_REQUEST",
+                                  "message": "name, email and password are required"}}), 400
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"error": {"code": "BAD_EMAIL",
+                                  "message": "that does not look like a valid email"}}), 400
+    if len(password) < 8:
+        return jsonify({"error": {"code": "WEAK_PASSWORD",
+                                  "message": "password must be at least 8 characters"}}), 400
+
+    existing = db.session.execute(
+        db.select(User).filter_by(email=email)).scalar_one_or_none()
+    if existing is not None:
+        return jsonify({"error": {"code": "EMAIL_TAKEN",
+                                  "message": "an account with this email already exists"}}), 409
+
+    user = User(
+        name=name,
+        email=email,
+        role="consumer",
+        password_hash=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    token = create_access_token(
+        identity=str(user.id),
+        additional_claims={"role": user.role, "name": user.name})
+    return jsonify({"access_token": token,
+                    "user": {"id": str(user.id), "name": user.name,
+                             "email": user.email, "role": user.role}}), 201
+
+
 @bp.get("/me")
 @jwt_required()
 def me():

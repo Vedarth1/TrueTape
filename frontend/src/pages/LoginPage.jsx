@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
 const DEMO_ACCOUNTS = [
@@ -87,6 +87,13 @@ export default function LoginPage() {
           >
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
+
+          <p className="mt-4 text-center text-xs text-slate-400">
+            New here?{' '}
+            <Link to="/signup" className="font-medium text-slate-600 underline hover:text-slate-900">
+              Create a consumer account
+            </Link>
+          </p>
         </form>
 
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

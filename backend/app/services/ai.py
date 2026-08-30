@@ -96,17 +96,15 @@ def _compute_confidence(exc: ExceptionRecord, context: dict) -> tuple[float, dic
     }
 
 
-def _build_problem_text(exc: ExceptionRecord, context: dict) -> str:
-    field = exc.field_name or "unknown"
-    if exc.exception_type == "source_conflict":
-        return f"Conflicting values for field '{field}' across data sources."
-    if exc.exception_type == "staleness":
-        return f"Data for field '{field}' may be stale (last updated > 180 days ago)."
-    if exc.exception_type == "duplicate":
-        return "Potential duplicate loan detected based on borrower fingerprint."
+def _build_problem_text(exc, context) -> str:
     rule_code = context.get("rule_code", "unknown")
+    is_dataset_rule = exc.field_name is None and (
+        rule_code.startswith("DUPLICATE_") or rule_code.startswith("REPEATED_"))
+    if is_dataset_rule:
+        return (f"Dataset-scope check '{rule_code}' flagged this record against "
+                f"others in the dataset (no single field is at fault).")
+    field = exc.field_name or "unknown"
     return f"Validation rule '{rule_code}' failed on field '{field}'."
-
 
 def _build_evidence_dict(exc: ExceptionRecord, context: dict) -> dict:
     field = exc.field_name or ""
@@ -146,18 +144,33 @@ def _build_suggestion(exc: ExceptionRecord, context: dict) -> tuple[str, str, Op
         candidates.sort(key=lambda c: c[2], reverse=True)
         return field, candidates[0][1], candidates[0][0]
     if exc.exception_type == "validation_failure":
+        current_str = str(current) if current is not None else None
         for ss, val, _ in candidates:
-            if val != (str(current) if current is not None else None):
+            if val != current_str:
                 return field, val, ss
+        # Every source carries the same failing value. Suggesting it back
+        # would be nonsense -- the honest answer is that no source offers a
+        # valid alternative, so a human must supply the correct value via
+        # the edit/manual-resolution path.
+        return field, "", None
     candidates.sort(key=lambda c: c[2], reverse=True)
     return field, candidates[0][1], candidates[0][0]
 
 
 def _build_reasoning(exc, context, suggestion, confidence) -> str:
-    field = exc.field_name or "unknown"
-    canon = context.get("canonical_data", {}) or {}
     rule_code = context.get("rule_code", "unknown")
-    parts = [f"Field '{field}'"]
+    is_dataset_rule = exc.field_name is None and (
+        rule_code.startswith("DUPLICATE_") or rule_code.startswith("REPEATED_"))
+    field = exc.field_name or ("dataset-level check" if is_dataset_rule else "unknown")
+    canon = context.get("canonical_data", {}) or {}
+    parts = []
+
+    if is_dataset_rule:
+        parts.append(f"This is a dataset-scope check ({rule_code}): it compares "
+                     "records against each other rather than one field's value, "
+                     "so there is no single field to correct.")
+    else:
+        parts.append(f"Field '{field}'")
 
     if exc.exception_type == "source_conflict":
         vals = [f"{s['source_system']}={s['data'].get(field, 'N/A')}" for s in context.get("source_records", []) if s.get("data", {}).get(field) is not None]
@@ -166,20 +179,24 @@ def _build_reasoning(exc, context, suggestion, confidence) -> str:
         parts.append("may be stale (last update exceeds the staleness threshold).")
     elif exc.exception_type == "duplicate":
         parts.append("shares a borrower fingerprint with another loan.")
-    else:
+    elif not is_dataset_rule:
         parts.append(f"failed validation rule '{rule_code}'.")
 
-    cur = canon.get(field, "N/A")
-    parts.append(f"Current canonical value: {cur}.")
+    if not is_dataset_rule:
+        cur = canon.get(field, "N/A")
+        parts.append(f"Current canonical value: {cur}.")
 
     sf, sv, ss = suggestion
     if sv:
         parts.append(f"Suggested correction: {sf} -> {sv}")
         if ss:
             parts.append(f"(source: {ss}).")
+    elif exc.exception_type == "validation_failure" and not is_dataset_rule:
+        parts.append("No source offers a valid alternative for this field -- "
+                     "every source repeats the failing value, so a manual "
+                     "correction is required (use Edit value).")
     parts.append(f"Confidence: {confidence:.0%} based on exception type, field impact, source coverage, and data completeness.")
     return " ".join(parts)
-
 
 def _load_exception_context(exc_id: uuid.UUID) -> tuple[ExceptionRecord, dict[str, Any]]:
     exc = db.session.get(ExceptionRecord, exc_id)

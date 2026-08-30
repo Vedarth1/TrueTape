@@ -20,13 +20,16 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)       // { id, role, name }
-  const [booting, setBooting] = useState(true) // restoring a saved session?
+  // Lazy initial value: booting is only ever true when a token exists to
+  // verify, so the no-token case never needs a setState in the effect.
+  const [booting, setBooting] = useState(
+    () => Boolean(localStorage.getItem('truetape_token')))
 
   // On mount: if a token is stored, verify it is still valid (and pull fresh
   // role/name) via /me. An expired token logs the user out cleanly.
   useEffect(() => {
     const token = localStorage.getItem('truetape_token')
-    if (!token) { setBooting(false); return }
+    if (!token) return
     api.get('/auth/me')
       .then((res) => setUser(res.data))
       .catch(() => localStorage.removeItem('truetape_token'))
@@ -54,6 +57,7 @@ export function AuthProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext)
 }

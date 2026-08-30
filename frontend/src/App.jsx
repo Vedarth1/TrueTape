@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/auth'
 import AppShell from './components/AppShell'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import OperatorDashboard from './pages/OperatorDashboard'
 import ReviewerQueue from './pages/ReviewerQueue'
 import ConsumerDashboard from './pages/ConsumerDashboard'
@@ -19,23 +21,20 @@ function Protected({ roles, children }) {
   return children
 }
 
-function HomeRedirect() {
-  const { user } = useAuth()
-  const home = { operator: '/operator', reviewer: '/reviewer', consumer: '/consumer' }
-  return <Navigate to={user ? home[user.role] ?? '/login' : '/login'} replace />
-}
-
+// Landing + auth pages are public; the app shell (everything else) requires
+// a session. Signing in from any of them routes by role.
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route element={<Protected><AppShell /></Protected>}>
           <Route path="/operator" element={<Protected roles={['operator', 'reviewer']}><OperatorDashboard /></Protected>} />
           <Route path="/reviewer" element={<Protected roles={['reviewer']}><ReviewerQueue /></Protected>} />
           <Route path="/consumer" element={<Protected roles={['operator', 'reviewer', 'consumer']}><ConsumerDashboard /></Protected>} />
-          <Route path="/" element={<HomeRedirect />} />
-          <Route path="*" element={<div>Not found</div>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </AuthProvider>
