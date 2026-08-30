@@ -1,0 +1,11 @@
+# keep the build context small and secret-free
+.git
+**/__pycache__
+**/myenv
+frontend/node_modules
+frontend/dist
+data/real2025q1
+*.zip
+.env
+*.log
+docs/
