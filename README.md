@@ -300,9 +300,13 @@ docker compose exec -T backend flask reconcile-oracle
 
 ## Deliverables & docs
 
-- `docs/AI_DEV_LOG.md` — AI development log.
+- `docs/ARCHITECTURE.md` — architecture note: layering rationale, integrity model, oracle reconciliation.
+- `docs/AI_DEV_LOG.md` — AI development log (10 verbatim prompts, 11 caught defects, session log).
+- `docs/DEMO_SCRIPT.md` — 5-minute demo walkthrough with judge Q&A.
 - `data/seed/generation_summary.json` — QA oracle (215 injected defects) used by `reconcile-oracle`.
 - `data/generate_dataset.py` — regenerate the messy multi-source dataset.
+- `data/real2025q1/` — adapter that turns the real Freddie Mac 2025Q1 dataset (~2.47M loans) into seed CSVs.
+- `deploy/DEPLOY_EC2.md` — EC2 deployment guide (alternative to Render; no-Docker layout).
 
 ## Deploying on AWS EC2 (Docker, free tier)
 
