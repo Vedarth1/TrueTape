@@ -200,8 +200,7 @@ audit_events (global hash chain, append-only) · trust/source config tables
 Docker Compose (db + API + frontend) is both the development and the deployment
 artifact. On EC2 free tier the same compose runs unchanged with committed seed data
 (`data/seed` is part of the deployment contract — `flask seed` reads it from the
-mounted volume) and `VITE_API_URL` pointed at the host. `deploy/DEPLOY_EC2.md`
-documents the steps and the free-tier adaptations.
+mounted volume) and `VITE_API_URL` pointed at the host.
 
 ## 8. What we would do next
 

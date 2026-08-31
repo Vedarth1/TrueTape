@@ -305,8 +305,6 @@ docker compose exec -T backend flask reconcile-oracle
 - `docs/DEMO_SCRIPT.md` — 5-minute demo walkthrough with judge Q&A.
 - `data/seed/generation_summary.json` — QA oracle (215 injected defects) used by `reconcile-oracle`.
 - `data/generate_dataset.py` — regenerate the messy multi-source dataset.
-- `data/real2025q1/` — adapter that turns the real Freddie Mac 2025Q1 dataset (~2.47M loans) into seed CSVs.
-- `deploy/DEPLOY_EC2.md` — EC2 deployment guide (alternative to Render; no-Docker layout).
 
 ## Deploying on AWS EC2 (Docker, free tier)
 
@@ -341,6 +339,4 @@ Gotchas that bit us:
 - `data/seed/` must be committed — `flask seed` reads it from the mounted volume
 - `VITE_API_URL` must point at the EC2 IP, not localhost, or the browser cannot reach the API
 - Security group must expose 5173 (UI) and 5001 (API) — or put nginx in front and expose 80
-- Free-tier t2.micro: add a swapfile, and expect ~50 s of latency after idle spin-down only on PaaS; EC2 stays warm
-
-`deploy/DEPLOY_EC2.md` has the alternative no-Docker layout (native Postgres + systemd + nginx).
+- Free-tier t2.micro: add a swapfile (the API + Postgres fit in 1 GB with one gunicorn worker)

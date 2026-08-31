@@ -28,8 +28,6 @@ Expected canonical numbers (verify on screen before starting):
 | Verified loans | 1,145 · avg trust 87.0 |
 | Tests | 17/17 · both hash chains OK |
 
-**Optional real-data variant:** upload `data/real2025q1/out/*.csv` instead (1,500 real Freddie Mac 2025Q1 loans → 2,703 total, 3,000 exceptions, 22 clusters). Talking point: *"we validated the pipeline against 2.47M real loans sampled down to 1,500."*
-
 **Resume point for a retake:** if a step fails mid-demo, `make db-reset` + re-upload + `make validate` + verify-batch restores this exact state in ~2 minutes.
 
 ---
