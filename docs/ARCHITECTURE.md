@@ -11,21 +11,21 @@ an AI assistant helps without ever touching data.
 
 ## 1. System overview
 
+```mermaid
+graph TD
+    subgraph Clients["Three role-based UIs"]
+        OP["Operator — ingest & pipeline"]
+        RV["Reviewer — queue & decisions"]
+        CO["Consumer — browse & export"]
+    end
+    Clients -->|"JWT over HTTP"| API["Flask API<br/>(blueprints: auth · files · pipeline · exceptions · ai · rules · verified · consumer · audit · health)"]
+    API --> SRV["Services layer<br/>(ai · audit · verification · canonical · clustering)"]
+    API --> ENG["Validation engine<br/>(whitelisted DSL · no eval)"]
+    API --> DB[("PostgreSQL 16<br/>two roles · append-only grants")]
+    SRV --> DB
+    ENG --> DB
 ```
-                      ┌────────────────────────────────────────────────────┐
-  React SPA           │ Flask API (blueprints)                             │
-  (Vite build)        │                                                    │
-  ┌──────────┐  HTTP  │  auth · files · pipeline · exceptions · ai ·       │
-  │ Operator │───────►│  rules · verified · consumer · audit · health      │
-  │ Reviewer │  JWT   │        │                                           │
-  │ Consumer │        │        ▼                                           │
-  └──────────┘        │  services (ai · audit · verification · canonical · │
-                      │             clustering)      validation (dsl+runner)│
-                      │        │                                           │
-                      │        ▼                                           │
-                      │  PostgreSQL 16 — two roles, append-only grants     │
-                      └────────────────────────────────────────────────────┘
-```
+*Renders on GitHub; the same diagram in ASCII lives in the README's pipeline section.*
 
 - **Frontend** — React 19 + Vite + TanStack Query. The View layer lives entirely here;
   the backend is a JSON API, which is why the backend does not use classic MVC
@@ -37,6 +37,20 @@ an AI assistant helps without ever touching data.
 - **Database** — PostgreSQL 16 with a two-role, least-privilege grant model (§4).
 
 ## 2. The pipeline — five stages, five code homes
+
+```mermaid
+flowchart LR
+    UP["Upload CSVs<br/>(operator, POST /api/files)"] --> P1["Stages 1–2<br/>parse + normalise"]
+    P1 -->|"raw_records → versioned loan_records"| P3["Stage 3<br/>validate: row · dataset · cross-source"]
+    P3 -->|"validation_results + exceptions"| P4["Stage 4<br/>canonical blend by field trust"]
+    P4 -->|"loan_canonical + pinned fields"| P5["Stage 5<br/>cluster by root cause"]
+    P5 -->|"exception_clusters"| REV["Reviewer<br/>(AI assist · accept / edit / reject)"]
+    REV -->|"decisions (hash-chained)"| VER["Verify<br/>(no open blocking exceptions)"]
+    VER -->|"verified_record + trust score"| CON["Consumer<br/>(browse · provenance · export)"]
+    P1 -->|"unreadable rows quarantined"| EXC["import_error exceptions"]
+    EXC --> REV
+```
+*Stages 1–2 run automatically per upload; stages 3–5 run as one atomic `run-pipeline` command.*
 
 | Stage | What happens | Code | Trigger |
 |---|---|---|---|
@@ -161,7 +175,30 @@ keys or `[object Object]` anywhere. The reviewer resolve form is coupled to the 
 suggestion (one-click accept, recorded agreement), and every page has designed empty,
 loading and error states.
 
-## 5. Oracle reconciliation (engine 230 vs oracle 215)
+## 5. The review loop — AI controls in one picture
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as Reviewer (UI)
+    participant AI as AI assistant
+    participant Q as Exception queue
+    participant D as Decision service
+    participant A as Audit chain
+    UI->>Q: open exception
+    UI->>AI: Analyze failure / Classify / Draft note
+    AI-->>UI: explanation + suggested fix (inert, prompt + model metadata)
+    UI->>D: Accept AI fix / Edit / Reject (+ request correction)
+    D->>Q: exception resolved; loan → in_review if correction requested
+    D->>A: decision + ai agreement verdict (hash-chained append)
+    UI->>A: GET /api/verify
+    A-->>UI: "✓ chains verified"
+```
+
+Every AI output is separate from every human decision, metadata is hashed into the
+chain, and no AI output mutates data — the only writer is the reviewer's decision.
+
+## 6. Oracle reconciliation (engine 230 vs oracle 215)
 
 The provided oracle lists deliberately injected defects. The engine is a **superset**;
 `flask reconcile-oracle` matches oracle rows to engine findings and buckets every
@@ -178,7 +215,7 @@ delta (exit non-zero on anything unexplained):
 
 **RESULT: PASS** — zero unexplained deltas.
 
-## 6. Data model (16 tables, the spine)
+## 7. Data model (16 tables, the spine)
 
 ```
 users ── raw_files ── raw_records ── loan_records (versioned per source,
@@ -195,14 +232,14 @@ loans ── loan_canonical (blended + pinned fields)         │
 audit_events (global hash chain, append-only) · trust/source config tables
 ```
 
-## 7. Deployment shape
+## 8. Deployment shape
 
 Docker Compose (db + API + frontend) is both the development and the deployment
 artifact. On EC2 free tier the same compose runs unchanged with committed seed data
 (`data/seed` is part of the deployment contract — `flask seed` reads it from the
 mounted volume) and `VITE_API_URL` pointed at the host.
 
-## 8. What we would do next
+## 9. What we would do next
 
 - **Vertical slices**: promote `verification` and `consumer` from `api/` modules into
   feature packages owning models + routes + service (the current layout is one
