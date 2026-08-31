@@ -57,7 +57,7 @@ flowchart LR
 | 1. Parse | CSV → `raw_records`, byte-faithful, with per-row parse errors | `ingestion/service.py` | automatic on upload (worker thread) |
 | 2. Normalise | raw rows → versioned `loan_records` + canonical `loans`; unreadable rows quarantined as `import_error` | `ingestion/normalizer.py` | automatic (same worker) |
 | 3. Validate | row-scope rules (B1), dataset-scope rules (B2), cross-source conflicts (B3) → `validation_results` + exceptions | `validation/runner.py` (+ `validation/dsl.py`) | `flask run-pipeline` / `POST /api/pipeline/run` |
-| 4. Canonical blend | per-field survivorship across sources by trust → `loan_canonical` | `services/canonical.py` | same |
+| 4. Canonical blend | per-field survivorship across sources by trust → `loan_canonical` (the per-field trust table is defined in §6.1) | `services/canonical.py` | same |
 | 5. Cluster | open exceptions grouped by root cause → `exception_clusters` | `services/clustering.py` | same |
 
 Stages 1–2 run per upload; 3–5 run as **one atomic command** (`run-pipeline`,
@@ -198,7 +198,92 @@ sequenceDiagram
 Every AI output is separate from every human decision, metadata is hashed into the
 chain, and no AI output mutates data — the only writer is the reviewer's decision.
 
-## 6. Oracle reconciliation (engine 230 vs oracle 215)
+## 6. Scoring & decisioning — the three numbers, defined
+
+### 6.1 Trust score (0–100, computed at verify)
+
+```
+score = 0.40 · validation_pass_rate
+      + 0.30 · exception_health
+      + 0.15 · source_coverage
+      + 0.15 · source_trust_average
+```
+
+The first two factors are **severity-weighted** (`LOW 1 · MEDIUM 2 · HIGH 4 ·
+CRITICAL 8`), so a CRITICAL pass or resolution moves the score eight times as far
+as a LOW one:
+
+| Factor | Formula | Note |
+|---|---|---|
+| Validation pass rate (40%) | `w_pass / (w_pass + w_fail) × 100` | not-applicable checks are excluded — a blank cell cannot fabricate a failure; no results at all → 0, not 100 |
+| Exception health (30%) | `w_resolved / w_total × 100` | "resolved" = a reviewer acted (accept / edit / manual / reject) |
+| Source coverage (15%) | `distinct non-human sources / 3 × 100` | reviewer overrides are excluded — corroboration must come from independent systems |
+| Source trust (15%) | `mean(trust of winning source per field)` | averages how authoritative each canonical field's source is |
+
+**The guardrail:** a loan with **no validation evidence** is capped at **25 / 100**
+(`if not has_validation_evidence and score > 25 → 25`). Provenance alone cannot
+certify an unchecked loan.
+
+**Per-field provenance policy** (the trust table that decides which source wins each
+field — data in `trust_config.json`, not code): original_principal → OriginationCore 90
+/ Servicer 60; current_balance, payment_status, days_past_due → Servicer 92 / Origination
+55; document_status → Manifest 95; a reviewer override pins the field at 100, outranking
+every machine source. Origination is authoritative at closing, the servicer owns
+post-boarding movement, the manifest owns documents.
+
+### 6.2 AI confidence (0.38–0.92, computed at review)
+
+```
+confidence = 0.25 + type + severity + impact + evidence + completeness      (clamped 0–1)
+```
+
+| Component | Range | Rationale |
+|---|---|---|
+| Base | 0.25 | fixed floor for any recommendation |
+| Exception type | 0.04–0.13 | conflicts are easier to reason about than import errors |
+| Severity | 0.02–0.07 | higher-severity findings carry more signal |
+| Field impact | 0.04 / 0.10 | financially material / identity fields weigh more |
+| Evidence | 0.03–0.22 | more corroborating sources → more confidence |
+| Completeness | 0.00–0.15 | canonical + source values present |
+
+Computed by the backend from the exception's observable properties — the assistant
+cannot inflate its own confidence. **The ceiling is 0.92 by construction: the model is
+never allowed to claim certainty** (never 1.00). Worked example — a HIGH source_conflict
+on `current_balance` corroborated by two sources: 0.25 + 0.13 (type) + 0.05 (severity)
++ 0.10 (impact) + 0.22 (evidence) + 0.15 (completeness) = **0.90**.
+
+### 6.3 Triage priority — three coordinated signals
+
+There is no `priority` column. What a reviewer works first emerges from:
+
+1. **Severity rank** — `SEV_ORDER`: CRITICAL > HIGH > MEDIUM > LOW.
+2. **The blocking gate** — `is_blocking = severity ∈ {HIGH, CRITICAL}`; blocking
+   exceptions prevent verification, LOW/MEDIUM may stay open.
+3. **Cluster ordering** — clusters are ordered by open count, so the biggest systematic
+   defect surfaces first and can be cleared in one action.
+
+### 6.4 Advisory severity re-check (`classify_severity`)
+
+The assistant independently reviews each rule-assigned severity, stored beside it in
+`ai_severity` (never overwriting the rule's call — the agreement rate is therefore
+computable):
+
+- **Material field** (financial / identity / dataset-structural) → *severity stands*.
+- **Non-material HIGH / CRITICAL** → *eased exactly one level, floored at MEDIUM* — a
+  serious defect is never dropped to trivial.
+- **Low-impact LOW / MEDIUM** → no change.
+
+Advisory only: the recommendation is inert, and only a human decision can act on it
+(hash-chained, like every decision).
+
+### 6.5 Eligibility vs trust score — kept distinct
+
+**Eligibility is a binary gate** (no open blocking exceptions). **The trust score is a
+0–100 quality measure** minted once a loan passes that gate. A loan can be eligible yet
+score modestly — the gate asks "may we certify it?", the score asks "how much evidence
+backs the certification?".
+
+## 7. Oracle reconciliation (engine 230 vs oracle 215)
 
 The provided oracle lists deliberately injected defects. The engine is a **superset**;
 `flask reconcile-oracle` matches oracle rows to engine findings and buckets every
@@ -215,7 +300,7 @@ delta (exit non-zero on anything unexplained):
 
 **RESULT: PASS** — zero unexplained deltas.
 
-## 7. Data model (16 tables, the spine)
+## 8. Data model (16 tables, the spine)
 
 ```
 users ── raw_files ── raw_records ── loan_records (versioned per source,
@@ -232,14 +317,14 @@ loans ── loan_canonical (blended + pinned fields)         │
 audit_events (global hash chain, append-only) · trust/source config tables
 ```
 
-## 8. Deployment shape
+## 9. Deployment shape
 
 Docker Compose (db + API + frontend) is both the development and the deployment
 artifact. On EC2 free tier the same compose runs unchanged with committed seed data
 (`data/seed` is part of the deployment contract — `flask seed` reads it from the
 mounted volume) and `VITE_API_URL` pointed at the host.
 
-## 9. What we would do next
+## 10. What we would do next
 
 - **Vertical slices**: promote `verification` and `consumer` from `api/` modules into
   feature packages owning models + routes + service (the current layout is one
