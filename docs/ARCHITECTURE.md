@@ -186,13 +186,13 @@ sequenceDiagram
     participant D as Decision service
     participant A as Audit chain
     UI->>Q: open exception
-    UI->>AI: Analyze failure / Classify / Draft note
-    AI-->>UI: explanation + suggested fix (inert, prompt + model metadata)
-    UI->>D: Accept AI fix / Edit / Reject (+ request correction)
-    D->>Q: exception resolved; loan → in_review if correction requested
-    D->>A: decision + ai agreement verdict (hash-chained append)
+    UI->>AI: Analyze failure, Classify, Draft note
+    AI-->>UI: explanation + suggested fix, inert with prompt and model metadata
+    UI->>D: Accept AI fix, Edit, or Reject
+    D->>Q: exception resolved. Loan back to in_review if correction was requested
+    D->>A: decision + ai agreement verdict, hash-chained append
     UI->>A: GET /api/verify
-    A-->>UI: "✓ chains verified"
+    A-->>UI: chains verified
 ```
 
 Every AI output is separate from every human decision, metadata is hashed into the
