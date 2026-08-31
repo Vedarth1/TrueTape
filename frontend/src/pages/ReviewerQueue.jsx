@@ -697,18 +697,27 @@ export default function ReviewerQueue() {
   const [severity, setSeverity] = useState('')
   const [excType, setExcType] = useState('')
   const [blockingOnly, setBlockingOnly] = useState(false)
+  const [statusTab, setStatusTab] = useState('open')   // open | resolved | rejected | all
   const [page, setPage] = useState(1)
   const PER_PAGE = 25
 
   const params = useMemo(() => {
     const p = { page, per_page: PER_PAGE }
+    if (statusTab !== 'all') p.status = statusTab
     if (clusterFilter) p.cluster_id = clusterFilter
     if (search.trim()) p.search = search.trim()
     if (severity) p.severity = severity
     if (excType) p.exception_type = excType
     if (blockingOnly) p.is_blocking = true
     return p
-  }, [page, clusterFilter, search, severity, excType, blockingOnly])
+  }, [page, clusterFilter, search, severity, excType, blockingOnly, statusTab])
+
+  // tab badges: global counts by status, one cheap call
+  const statusCounts = useQuery({
+    queryKey: ['exception-status-counts'],
+    queryFn: async () => (await api.get('/exceptions/stats')).data,
+    refetchInterval: 30000,
+  })
 
   const clusters = useQuery({
     queryKey: ['clusters'],
@@ -875,6 +884,38 @@ export default function ReviewerQueue() {
           <button onClick={() => setBulkResult(null)} className="text-xs text-emerald-600 underline">dismiss</button>
         </div>
       )}
+
+      {/* status tabs — open work stays separate from what is already decided */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          ['open', 'Open'],
+          ['resolved', 'Resolved'],
+          ['rejected', 'Rejected'],
+          ['all', 'All'],
+        ].map(([key, label]) => {
+          const active = statusTab === key
+          const n = statusCounts.data?.by_status?.[key]
+          return (
+            <button
+              key={key}
+              onClick={() => { setStatusTab(key); setPage(1) }}
+              className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                active
+                  ? 'bg-slate-900 font-medium text-white'
+                  : 'border border-slate-300 text-slate-600 hover:border-slate-400'
+              }`}
+            >
+              {label}
+              {typeof n === 'number' && (
+                <span className={`ml-1.5 rounded px-1.5 py-0.5 text-xs ${
+                  active ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>
+                  {n}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
 
       {/* cluster cards */}
       <div>
