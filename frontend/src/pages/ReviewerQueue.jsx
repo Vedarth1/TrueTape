@@ -612,15 +612,22 @@ function ExceptionDetailPage({ excId, onBack }) {
                   <span className="text-xs text-slate-400">v{r.version} · {r.origin}</span>
                 </div>
                 {r.field_errors && Object.keys(r.field_errors).length > 0 && (
-                  <div className="mt-1 text-xs text-red-600">
+                  <div className="mt-1.5 space-y-1">
                     {Object.entries(r.field_errors).map(([f, e]) => {
                       const raw = e && typeof e === 'object' ? e.raw : e
                       const expected = e && typeof e === 'object' ? e.expected : null
                       return (
-                        <div key={f} title={expected ? `expected type: ${expected}` : undefined}>
-                          coercion error — {fieldLabel(f)}:{' '}
-                          <span className="font-mono">“{String(raw)}”</span>
-                          {expected && <span className="text-slate-400"> (expected {expected})</span>}
+                        <div
+                          key={f}
+                          className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs"
+                          title={expected ? `expected type: ${expected}` : undefined}
+                        >
+                          <span className="font-medium text-amber-800">value unparsed</span>
+                          <span className="text-slate-500">{fieldLabel(f)}</span>
+                          <span className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-slate-600">
+                            {String(raw)}
+                          </span>
+                          {expected && <span className="text-slate-400">expected {expected}</span>}
                         </div>
                       )
                     })}
