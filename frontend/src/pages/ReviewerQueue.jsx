@@ -375,12 +375,25 @@ function ResolveForm({ exc, onDone }) {
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="">Select field to correct…</option>
-            {(exc.canonical_data && Object.keys(exc.canonical_data).length
-              ? Object.keys(exc.canonical_data)
-              : Object.keys(FIELD_LABELS)
-            ).map((f) => (
-              <option key={f} value={f}>{fieldLabel(f)}</option>
-            ))}
+            {(() => {
+              // Full canonical field list — fields MISSING from the canonical
+              // record are exactly the ones a correction most needs to target
+              // (e.g. an unparseable date never made it into canonical data),
+              // so they are offered too and labelled as such.
+              const keys = new Set(Object.keys(FIELD_LABELS))
+              Object.keys(exc.canonical_data ?? {}).forEach((k) => keys.add(k))
+              if (exc.field_name) keys.add(exc.field_name)
+              return [...keys]
+                .sort((a, b) => fieldLabel(a).localeCompare(fieldLabel(b)))
+                .map((f) => {
+                  const missing = !exc.canonical_data || !(f in exc.canonical_data)
+                  return (
+                    <option key={f} value={f}>
+                      {fieldLabel(f)}{missing ? '  — (missing in canonical)' : ''}
+                    </option>
+                  )
+                })
+            })()}
           </select>
           <input
             value={afterValue}
