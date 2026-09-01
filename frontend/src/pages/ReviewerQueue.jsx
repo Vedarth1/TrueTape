@@ -613,7 +613,17 @@ function ExceptionDetailPage({ excId, onBack }) {
                 </div>
                 {r.field_errors && Object.keys(r.field_errors).length > 0 && (
                   <div className="mt-1 text-xs text-red-600">
-                    coercion errors: {Object.entries(r.field_errors).map(([f, msg]) => `${f} (${msg})`).join(', ')}
+                    {Object.entries(r.field_errors).map(([f, e]) => {
+                      const raw = e && typeof e === 'object' ? e.raw : e
+                      const expected = e && typeof e === 'object' ? e.expected : null
+                      return (
+                        <div key={f} title={expected ? `expected type: ${expected}` : undefined}>
+                          coercion error — {fieldLabel(f)}:{' '}
+                          <span className="font-mono">“{String(raw)}”</span>
+                          {expected && <span className="text-slate-400"> (expected {expected})</span>}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
                 <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
